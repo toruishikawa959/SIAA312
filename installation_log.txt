@@ -1,0 +1,5 @@
+Starting installation process... 
+--- 
+v22.17.0
+Node.js is installed. 
+10.9.2
