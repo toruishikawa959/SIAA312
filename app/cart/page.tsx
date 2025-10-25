@@ -1,19 +1,86 @@
 "use client"
 
+import { useEffect, useState } from "react"
+import { useRouter } from "next/navigation"
 import { Navigation } from "@/components/navigation"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { ShoppingBag, Trash2, ArrowRight } from "lucide-react"
+import { ShoppingBag, Trash2, ArrowRight, AlertCircle, LogIn } from "lucide-react"
 import Link from "next/link"
 import { formatPeso } from "@/lib/currency"
+import {
+  getGuestCart,
+  removeFromGuestCart,
+  updateGuestCartQuantity,
+  clearGuestCart,
+  GuestCartItem,
+} from "@/lib/guest-cart"
 
 export default function Cart() {
-  const cartItems = [] // Empty cart for now
+  const router = useRouter()
+  const [cartItems, setCartItems] = useState<GuestCartItem[]>([])
+  const [isLoggedIn, setIsLoggedIn] = useState(false)
+  const [loading, setLoading] = useState(true)
 
-  const subtotal = 0
-  const tax = subtotal * 0.12 // Updated tax to 12% VAT (Philippine standard)
+  useEffect(() => {
+    // Check if user is logged in
+    const userId = localStorage.getItem("userId")
+    setIsLoggedIn(!!userId)
+
+    // Load guest cart
+    const guestItems = getGuestCart()
+    setCartItems(guestItems)
+    setLoading(false)
+  }, [])
+
+  const handleRemove = (bookId: string) => {
+    removeFromGuestCart(bookId)
+    setCartItems(cartItems.filter(item => item.bookId !== bookId))
+  }
+
+  const handleQuantityChange = (bookId: string, newQuantity: number) => {
+    if (newQuantity <= 0) {
+      handleRemove(bookId)
+    } else {
+      updateGuestCartQuantity(bookId, newQuantity)
+      setCartItems(
+        cartItems.map(item =>
+          item.bookId === bookId ? { ...item, quantity: newQuantity } : item
+        )
+      )
+    }
+  }
+
+  const handleCheckout = async () => {
+    if (!isLoggedIn) {
+      // Redirect to login/signup
+      router.push("/login")
+      return
+    }
+
+    // Proceed to checkout
+    router.push("/checkout")
+  }
+
+  const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
+  const tax = subtotal * 0.12
   const total = subtotal + tax
+
+  if (loading) {
+    return (
+      <>
+        <Navigation />
+        <main className="min-h-screen bg-off-white flex items-center justify-center">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold mx-auto"></div>
+            <p className="text-gray-600 mt-4">Loading cart...</p>
+          </div>
+        </main>
+        <Footer />
+      </>
+    )
+  }
 
   return (
     <>
@@ -35,33 +102,79 @@ export default function Cart() {
             ) : (
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Cart Items */}
-                <div className="lg:col-span-2">
-                  <div className="space-y-4">
-                    {cartItems.map((item) => (
-                      <Card key={item.id} className="card-base p-4 flex gap-4">
-                        <img
-                          src={item.cover || "/placeholder.svg"}
-                          alt={item.title}
-                          className="w-20 h-28 object-cover rounded"
-                        />
+                <div className="lg:col-span-2 space-y-4">
+                  {!isLoggedIn && (
+                    <Card className="card-base p-4 bg-blue-50 border-l-4 border-blue-500">
+                      <div className="flex items-start gap-3">
+                        <AlertCircle className="text-blue-600 flex-shrink-0 mt-0.5" size={20} />
                         <div className="flex-1">
-                          <h3 className="font-serif font-bold">{item.title}</h3>
-                          <p className="text-gray-600 text-sm">{item.author}</p>
-                          <div className="flex items-center gap-2 mt-2">
-                            <button className="border border-gray-300 px-2 py-1 rounded">-</button>
-                            <span className="px-4">{item.quantity}</span>
-                            <button className="border border-gray-300 px-2 py-1 rounded">+</button>
+                          <h3 className="font-semibold text-blue-900 mb-1">Guest Checkout</h3>
+                          <p className="text-blue-800 text-sm mb-3">
+                            Sign in to merge your cart with your account. Your items will be saved!
+                          </p>
+                          <div className="flex gap-2">
+                            <Link href="/login">
+                              <Button className="btn-secondary text-sm py-2 px-4">
+                                <LogIn size={16} className="mr-2" /> Sign In
+                              </Button>
+                            </Link>
+                            <Link href="/signup">
+                              <Button className="btn-outline text-sm py-2 px-4">Create Account</Button>
+                            </Link>
                           </div>
                         </div>
-                        <div className="text-right">
-                          <p className="font-bold">{formatPeso(item.price * item.quantity)}</p>
-                          <button className="text-coral hover:text-red-600 mt-2">
-                            <Trash2 size={20} />
+                      </div>
+                    </Card>
+                  )}
+
+                  {cartItems.map((item) => (
+                    <Card key={item.bookId} className="card-base p-4 flex gap-4">
+                      <div className="w-20 h-28 bg-gray-200 rounded overflow-hidden flex-shrink-0">
+                        {item.cover ? (
+                          <img
+                            src={item.cover}
+                            alt={item.title}
+                            className="w-full h-full object-cover"
+                          />
+                        ) : (
+                          <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                            <ShoppingBag size={20} className="text-gray-400" />
+                          </div>
+                        )}
+                      </div>
+                      <div className="flex-1">
+                        <h3 className="font-serif font-bold">{item.title}</h3>
+                        <p className="text-gray-600 text-sm">{item.author}</p>
+                        <div className="flex items-center gap-2 mt-2">
+                          <button
+                            onClick={() => handleQuantityChange(item.bookId, item.quantity - 1)}
+                            className="border border-gray-300 px-2 py-1 rounded hover:bg-gray-100"
+                            title="Decrease quantity"
+                          >
+                            −
+                          </button>
+                          <span className="px-4 font-semibold">{item.quantity}</span>
+                          <button
+                            onClick={() => handleQuantityChange(item.bookId, item.quantity + 1)}
+                            className="border border-gray-300 px-2 py-1 rounded hover:bg-gray-100"
+                            title="Increase quantity"
+                          >
+                            +
                           </button>
                         </div>
-                      </Card>
-                    ))}
-                  </div>
+                      </div>
+                      <div className="text-right flex flex-col justify-between">
+                        <p className="font-bold">{formatPeso(item.price * item.quantity)}</p>
+                        <button
+                          onClick={() => handleRemove(item.bookId)}
+                          className="text-coral hover:text-red-600 mt-2"
+                          title="Remove from cart"
+                        >
+                          <Trash2 size={20} />
+                        </button>
+                      </div>
+                    </Card>
+                  ))}
                 </div>
 
                 {/* Order Summary */}
@@ -82,11 +195,13 @@ export default function Cart() {
                       <span className="font-serif font-bold text-lg">Total</span>
                       <span className="text-coral font-bold text-lg">{formatPeso(total)}</span>
                     </div>
-                    <Link href="/checkout" className="w-full block mb-3">
-                      <Button className="btn-secondary w-full rounded-full">
-                        Proceed to Checkout <ArrowRight className="ml-2" size={20} />
-                      </Button>
-                    </Link>
+                    <button
+                      onClick={handleCheckout}
+                      className="w-full bg-coral text-white font-semibold py-3 rounded-full hover:bg-red-600 transition flex items-center justify-center gap-2 mb-3"
+                    >
+                      {isLoggedIn ? "Proceed to Checkout" : "Sign In to Checkout"}
+                      <ArrowRight size={20} />
+                    </button>
                     <Link href="/catalog">
                       <Button className="btn-outline w-full rounded-full">Continue Shopping</Button>
                     </Link>

@@ -1,63 +1,43 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { Navigation } from "@/components/navigation"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { Users, Heart, Sparkles, ArrowRight } from "lucide-react"
+import { Users, Heart, Sparkles, ArrowRight, Loader } from "lucide-react"
 import Link from "next/link"
 
+interface Book {
+  _id: string
+  title: string
+  author: string
+  category: string
+  price: number
+  cover?: string
+  imageError?: boolean
+}
+
 export default function Home() {
-  const featuredBooks = [
-    {
-      id: 1,
-      title: "The Art of Listening",
-      author: "Sarah Chen",
-      category: "Essay Collection",
-      price: 18.99,
-      cover: "/book-cover-art-listening.jpg",
-    },
-    {
-      id: 2,
-      title: "Voices Unheard",
-      author: "Marcus Williams",
-      category: "Poetry",
-      price: 14.99,
-      cover: "/book-cover-poetry-voices.jpg",
-    },
-    {
-      id: 3,
-      title: "Community & Change",
-      author: "Dr. Elena Rodriguez",
-      category: "Non-Fiction",
-      price: 22.99,
-      cover: "/book-cover-community.jpg",
-    },
-    {
-      id: 4,
-      title: "Zine Culture Today",
-      author: "Alex Thompson",
-      category: "Zine",
-      price: 12.99,
-      cover: "/book-cover-zine.jpg",
-    },
-    {
-      id: 5,
-      title: "Stories of Resilience",
-      author: "Various Authors",
-      category: "Anthology",
-      price: 19.99,
-      cover: "/book-cover-anthology.jpg",
-    },
-    {
-      id: 6,
-      title: "The Literary Journal",
-      author: "Collective",
-      category: "Journal",
-      price: 16.99,
-      cover: "/book-cover-journal.jpg",
-    },
-  ]
+  const [featuredBooks, setFeaturedBooks] = useState<Book[]>([])
+  const [loading, setLoading] = useState(true)
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set())
+
+  useEffect(() => {
+    const fetchFeaturedBooks = async () => {
+      try {
+        const response = await fetch("/api/books?limit=6")
+        const data = await response.json()
+        setFeaturedBooks(data.books || [])
+      } catch (error) {
+        console.error("Failed to fetch featured books:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchFeaturedBooks()
+  }, [])
 
   const values = [
     { icon: Users, title: "Inclusive", description: "Welcoming all voices and perspectives" },
@@ -116,30 +96,56 @@ export default function Home() {
         <section className="py-16 px-4 md:px-8">
           <div className="max-w-7xl mx-auto">
             <h2 className="font-serif text-4xl font-bold mb-12">Featured Books</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
-              {featuredBooks.map((book) => (
-                <Card key={book.id} className="card-base overflow-hidden hover:shadow-xl transition-all duration-300">
-                  <div className="aspect-[3/4] bg-gray-200 overflow-hidden">
-                    <img
-                      src={book.cover || "/placeholder.svg"}
-                      alt={book.title}
-                      className="w-full h-full object-cover"
-                    />
-                  </div>
-                  <div className="p-4">
-                    <div className="badge-gold mb-2 inline-block">{book.category}</div>
-                    <h3 className="font-serif font-bold text-lg mb-1">{book.title}</h3>
-                    <p className="text-gray-600 text-sm mb-4">{book.author}</p>
-                    <div className="flex items-center justify-between">
-                      <span className="badge-coral">${book.price.toFixed(2)}</span>
-                      <Link href={`/book/${book.id}`}>
-                        <Button className="btn-primary text-sm py-2 px-4">Add to Cart</Button>
-                      </Link>
+            
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader className="animate-spin text-gold" size={32} />
+                <span className="ml-3 text-gray-600">Loading featured books...</span>
+              </div>
+            ) : featuredBooks.length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-gray-600 mb-4">No books available yet.</p>
+                <Link href="/catalog">
+                  <Button className="btn-secondary">Browse All Books</Button>
+                </Link>
+              </div>
+            ) : (
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+                {featuredBooks.map((book) => (
+                  <Card key={book._id} className="card-base overflow-hidden hover:shadow-xl transition-all duration-300">
+                    <div className="aspect-[3/4] bg-gray-200 overflow-hidden flex items-center justify-center">
+                      {imageErrors.has(book._id) ? (
+                        <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                          <div className="text-center">
+                            <span className="text-gray-400">Book Cover</span>
+                          </div>
+                        </div>
+                      ) : (
+                        <img
+                          src={book.cover || "/placeholder.svg"}
+                          alt={book.title}
+                          className="w-full h-full object-cover"
+                          onError={() => {
+                            setImageErrors(prev => new Set([...prev, book._id]))
+                          }}
+                        />
+                      )}
                     </div>
-                  </div>
-                </Card>
-              ))}
-            </div>
+                    <div className="p-4">
+                      <div className="badge-gold mb-2 inline-block">{book.category}</div>
+                      <h3 className="font-serif font-bold text-lg mb-1">{book.title}</h3>
+                      <p className="text-gray-600 text-sm mb-4">{book.author}</p>
+                      <div className="flex items-center justify-between">
+                        <span className="badge-coral">${book.price.toFixed(2)}</span>
+                        <Link href={`/book/${book._id}`}>
+                          <Button className="btn-primary text-sm py-2 px-4">Add to Cart</Button>
+                        </Link>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
+              </div>
+            )}
           </div>
         </section>
       </main>

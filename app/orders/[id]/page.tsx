@@ -6,9 +6,14 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { ChevronLeft, Package, Mail, Phone, MapPin } from "lucide-react"
 import Link from "next/link"
+import { use } from "react"
 
-export default function OrderDetails({ params }) {
-  const orderId = params.id
+interface OrderParams {
+  id: string
+}
+
+export default function OrderDetails({ params }: { params: Promise<OrderParams> }) {
+  const { id: orderId } = use(params)
 
   // Mock order data
   const order = {
@@ -41,7 +46,7 @@ export default function OrderDetails({ params }) {
     total: 52.89,
   }
 
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: string): string => {
     switch (status) {
       case "Pending":
         return "bg-yellow-100 text-yellow-800"

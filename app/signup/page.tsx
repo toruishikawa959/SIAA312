@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { BookOpen, AlertCircle, CheckCircle } from "lucide-react"
+import { getGuestCartForMerge, clearGuestCart } from "@/lib/guest-cart"
 
 export default function SignupPage() {
   const router = useRouter()
@@ -42,36 +43,87 @@ export default function SignupPage() {
       // Validation
       if (!formData.firstName || !formData.lastName || !formData.email || !formData.password) {
         setError("Please fill in all fields")
+        setIsLoading(false)
         return
       }
 
       if (!formData.email.includes("@")) {
         setError("Please enter a valid email address")
+        setIsLoading(false)
         return
       }
 
       if (formData.password.length < 6) {
         setError("Password must be at least 6 characters long")
+        setIsLoading(false)
         return
       }
 
       if (formData.password !== formData.confirmPassword) {
         setError("Passwords do not match")
+        setIsLoading(false)
         return
       }
 
-      // Mock signup - in production, this would call an API
-      const newUser = {
-        id: Math.random().toString(36).substr(2, 9),
-        firstName: formData.firstName,
-        lastName: formData.lastName,
-        email: formData.email,
-        role: "customer",
-        createdAt: new Date().toISOString(),
+      // Call auth API to create user
+      const response = await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          firstName: formData.firstName,
+          lastName: formData.lastName,
+          email: formData.email,
+          password: formData.password,
+          action: "signup",
+        }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        setError(data.error || "Signup failed. Please try again.")
+        setIsLoading(false)
+        return
       }
 
+      const user = data.user
+
       // Store user session
-      localStorage.setItem("user", JSON.stringify(newUser))
+      localStorage.setItem(
+        "user",
+        JSON.stringify({
+          _id: user._id,
+          email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
+          role: user.role,
+        }),
+      )
+
+      // Store userId for guest cart merging
+      localStorage.setItem("userId", user._id)
+
+      // Merge guest cart if any items exist
+      const guestItems = getGuestCartForMerge()
+      if (guestItems.length > 0) {
+        try {
+          const mergeResponse = await fetch("/api/cart/merge", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              userId: user._id,
+              guestItems: guestItems,
+            }),
+          })
+
+          if (mergeResponse.ok) {
+            clearGuestCart()
+            console.log("Guest cart merged successfully")
+          }
+        } catch (mergeError) {
+          console.error("Failed to merge guest cart:", mergeError)
+        }
+      }
 
       setSuccess(true)
 

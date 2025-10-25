@@ -1,0 +1,7 @@
+[2025-10-25T20:35:30.590Z] [QR Ph] Payment Request Received {"orderId":"68fd349057dcdcb621a3330f","amount":165.648,"email":"spadev99@gmail.com","name":"Andrei mercado"}
+[2025-10-25T20:35:30.597Z] [QR Ph] Amount conversion {"originalAmount":165.648,"amountInCents":16565}
+[2025-10-25T20:35:30.599Z] [QR Ph] Step 1: Creating Payment Intent
+[2025-10-25T20:35:30.862Z] [QR Ph] Step 1 Success - Intent ID {"paymentIntentId":"pi_mCYW6Qkoh4L6CA6PokyPKGep","amountInCents":16565}
+[2025-10-25T20:35:30.988Z] [QR Ph] Step 3: Attaching Payment Method to Intent
+[2025-10-25T20:35:31.801Z] [QR Ph] Step 3 Success - Payment attached
+[2025-10-25T20:35:31.830Z] [QR Ph] Step 3 Success - Payment attached

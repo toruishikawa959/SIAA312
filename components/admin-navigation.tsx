@@ -46,12 +46,22 @@ export function AdminNavigation({ userType = "admin" }) {
 
         {/* Right Section */}
         <div className="flex items-center gap-4">
-          <button className="flex items-center gap-2 hover:text-gold transition-colors">
+          <button 
+            type="button"
+            title="User profile"
+            aria-label="User profile menu"
+            className="flex items-center gap-2 hover:text-gold transition-colors"
+          >
             <User size={20} />
           </button>
 
           {/* Mobile Menu Toggle */}
-          <button className="md:hidden" onClick={() => setIsOpen(!isOpen)}>
+          <button 
+            type="button"
+            title={isOpen ? "Close menu" : "Open menu"}
+            aria-label={isOpen ? "Close menu" : "Open menu"}
+            className="md:hidden" 
+            onClick={() => setIsOpen(!isOpen)}>
             {isOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>

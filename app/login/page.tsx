@@ -10,6 +10,7 @@ import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { BookOpen, AlertCircle } from "lucide-react"
+import { getGuestCartForMerge, clearGuestCart } from "@/lib/guest-cart"
 
 export default function LoginPage() {
   const router = useRouter()
@@ -24,40 +25,76 @@ export default function LoginPage() {
     setIsLoading(true)
 
     try {
-      // Simulate authentication - in production, this would call an API
+      // Validation
       if (!email || !password) {
         setError("Please fill in all fields")
+        setIsLoading(false)
         return
       }
 
       if (!email.includes("@")) {
         setError("Please enter a valid email address")
+        setIsLoading(false)
         return
       }
 
-      // Mock authentication - store user session
-      const mockUsers = [
-        { email: "customer@example.com", password: "password123", role: "customer" },
-        { email: "staff@example.com", password: "password123", role: "staff" },
-        { email: "admin@example.com", password: "password123", role: "admin" },
-      ]
+      // Call auth API to verify credentials
+      const response = await fetch("/api/auth", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          email,
+          password,
+          action: "login",
+        }),
+      })
 
-      const user = mockUsers.find((u) => u.email === email && u.password === password)
+      const data = await response.json()
 
-      if (!user) {
-        setError("Invalid email or password")
+      if (!response.ok) {
+        setError(data.error || "Invalid email or password")
+        setIsLoading(false)
         return
       }
+
+      const user = data.user
 
       // Store user session in localStorage
       localStorage.setItem(
         "user",
         JSON.stringify({
+          _id: user._id,
           email: user.email,
+          firstName: user.firstName,
+          lastName: user.lastName,
           role: user.role,
-          id: Math.random().toString(36).substr(2, 9),
         }),
       )
+
+      // Store userId for guest cart merging
+      localStorage.setItem("userId", user._id)
+
+      // Merge guest cart if any items exist
+      const guestItems = getGuestCartForMerge()
+      if (guestItems.length > 0) {
+        try {
+          const mergeResponse = await fetch("/api/cart/merge", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              userId: user._id,
+              guestItems: guestItems,
+            }),
+          })
+
+          if (mergeResponse.ok) {
+            clearGuestCart()
+            console.log("Guest cart merged successfully")
+          }
+        } catch (mergeError) {
+          console.error("Failed to merge guest cart:", mergeError)
+        }
+      }
 
       // Redirect based on role
       if (user.role === "admin") {

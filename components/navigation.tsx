@@ -19,8 +19,10 @@ export function Navigation() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [user, setUser] = useState<UserSession | null>(null)
   const [showUserMenu, setShowUserMenu] = useState(false)
+  const [mounted, setMounted] = useState(false)
 
   useEffect(() => {
+    setMounted(true)
     const storedUser = localStorage.getItem("user")
     if (storedUser) {
       const userData = JSON.parse(storedUser)
@@ -90,26 +92,38 @@ export function Navigation() {
 
           {/* User Menu */}
           <div className="relative">
-            {isLoggedIn ? (
-              <button
-                onClick={() => setShowUserMenu(!showUserMenu)}
-                className="flex items-center gap-2 hover:text-gold transition-colors"
-              >
-                <User size={20} />
-              </button>
+            {mounted ? (
+              isLoggedIn ? (
+                <button
+                  type="button"
+                  title="User profile menu"
+                  aria-label="User profile menu"
+                  onClick={() => setShowUserMenu(!showUserMenu)}
+                  className="flex items-center gap-2 hover:text-gold transition-colors"
+                >
+                  <User size={20} />
+                </button>
+              ) : (
+                <Link href="/login" className="hover:text-gold transition-colors">
+                  Sign In
+                </Link>
+              )
             ) : (
               <Link href="/login" className="hover:text-gold transition-colors">
                 Sign In
               </Link>
             )}
 
-            {isLoggedIn && showUserMenu && (
+            {mounted && isLoggedIn && showUserMenu && (
               <div className="absolute right-0 mt-2 w-48 bg-gray-800 border border-gray-700 rounded-lg shadow-lg py-2 z-50">
                 <div className="px-4 py-2 border-b border-gray-700">
                   <p className="text-sm text-gray-300">{user?.email}</p>
                   <p className="text-xs text-gold capitalize font-semibold">{user?.role}</p>
                 </div>
                 <button
+                  type="button"
+                  title="Sign out"
+                  aria-label="Sign out"
                   onClick={handleLogout}
                   className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-coral flex items-center gap-2 transition-colors"
                 >
@@ -121,7 +135,13 @@ export function Navigation() {
           </div>
 
           {/* Mobile Menu Toggle */}
-          <button className="md:hidden" onClick={() => setIsOpen(!isOpen)}>
+          <button 
+            type="button"
+            title={isOpen ? "Close menu" : "Open menu"}
+            aria-label={isOpen ? "Close menu" : "Open menu"}
+            className="md:hidden" 
+            onClick={() => setIsOpen(!isOpen)}
+          >
             {isOpen ? <X size={24} /> : <Menu size={24} />}
           </button>
         </div>

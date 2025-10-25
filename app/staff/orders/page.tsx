@@ -1,229 +1,217 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { AdminNavigation } from "@/components/admin-navigation"
 import { Footer } from "@/components/footer"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { ChevronDown, ChevronUp, Mail, Phone, MapPin } from "lucide-react"
+import { Button } from "@/components/ui/button"
+import { AlertCircle, Loader } from "lucide-react"
 import { formatPeso } from "@/lib/currency"
 
+interface OrderItem {
+  title: string
+  quantity: number
+  price: number
+}
+
+interface Order {
+  _id: string
+  guestName: string
+  guestEmail: string
+  guestPhone: string
+  guestAddress?: string
+  items: OrderItem[]
+  totalAmount: number
+  status: string
+  deliveryMethod: string
+  createdAt: string
+}
+
 export default function StaffOrders() {
-  const [expandedOrder, setExpandedOrder] = useState(null)
-  const [orderStatuses, setOrderStatuses] = useState({
-    "ORD-001": "Completed",
-    "ORD-002": "Shipped",
-    "ORD-003": "Ready for Pickup",
-    "ORD-004": "Processing",
-  })
+  const [orders, setOrders] = useState<Order[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
+  const [expandedOrder, setExpandedOrder] = useState<string | null>(null)
+  const [updatingOrderId, setUpdatingOrderId] = useState<string | null>(null)
 
-  const orders = [
-    {
-      id: "ORD-001",
-      date: "2025-01-15",
-      customer: "Sarah Johnson",
-      email: "sarah@example.com",
-      phone: "+1 (555) 123-4567",
-      total: 9900,
-      items: [
-        { title: "The First Bakla", quantity: 1, price: 450 },
-        { title: "Heat Index", quantity: 2, price: 450 },
-      ],
-      address: "123 Main Street, Manila, PH 1000",
-      notes: "Please leave at front door",
-    },
-    {
-      id: "ORD-002",
-      date: "2025-01-10",
-      customer: "John Smith",
-      email: "john@example.com",
-      phone: "+1 (555) 234-5678",
-      total: 13500,
-      items: [{ title: "Altar ng Pangungulila", quantity: 3, price: 450 }],
-      address: "456 Oak Avenue, Manila, PH 1001",
-      notes: "",
-    },
-    {
-      id: "ORD-003",
-      date: "2025-01-05",
-      customer: "Emma Davis",
-      email: "emma@example.com",
-      phone: "+1 (555) 345-6789",
-      total: 9900,
-      items: [{ title: "Lamanglupa Unlimited", quantity: 1, price: 450 }],
-      address: "789 Pine Road, Manila, PH 1002",
-      notes: "Gift wrapping requested",
-    },
-    {
-      id: "ORD-004",
-      date: "2024-12-28",
-      customer: "Michael Brown",
-      email: "michael@example.com",
-      phone: "+1 (555) 456-7890",
-      total: 19800,
-      items: [
-        { title: "Other Side", quantity: 2, price: 450 },
-        { title: "Kapag Sinabi Ko", quantity: 1, price: 450 },
-      ],
-      address: "321 Elm Street, Manila, PH 1003",
-      notes: "",
-    },
-  ]
+  useEffect(() => {
+    fetchOrders()
+  }, [])
 
-  const getStatusColor = (status) => {
-    switch (status) {
-      case "Pending":
-        return "bg-yellow-100 text-yellow-800"
-      case "Processing":
-        return "bg-blue-100 text-blue-800"
-      case "Ready for Pickup":
-        return "bg-purple-100 text-purple-800"
-      case "Shipped":
-        return "bg-indigo-100 text-indigo-800"
-      case "Completed":
-        return "bg-green-100 text-green-800"
-      case "Cancelled":
-        return "bg-red-100 text-red-800"
-      default:
-        return "bg-gray-100 text-gray-800"
+  async function fetchOrders() {
+    try {
+      setLoading(true)
+      const response = await fetch("/api/admin/orders")
+      if (!response.ok) throw new Error("Failed to fetch orders")
+      const data = await response.json()
+      setOrders(data.orders || [])
+      setError("")
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to load orders")
+    } finally {
+      setLoading(false)
     }
   }
 
-  const handleStatusChange = (orderId, newStatus) => {
-    setOrderStatuses((prev) => ({ ...prev, [orderId]: newStatus }))
+  async function updateOrderStatus(orderId: string, newStatus: string) {
+    try {
+      setUpdatingOrderId(orderId)
+      const response = await fetch(`/api/admin/orders/${orderId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ status: newStatus }),
+      })
+      if (!response.ok) throw new Error("Failed to update order")
+      await fetchOrders()
+    } catch (err) {
+      setError(err instanceof Error ? err.message : "Failed to update order")
+    } finally {
+      setUpdatingOrderId(null)
+    }
+  }
+
+  const getStatusColor = (status: string) => {
+    const colors: Record<string, string> = {
+      confirmed: "bg-blue-100 text-blue-800",
+      preparing: "bg-purple-100 text-purple-800",
+      ready_for_pickup: "bg-green-100 text-green-800",
+      shipped: "bg-green-100 text-green-800",
+      delivered: "bg-gray-100 text-gray-800",
+      pending: "bg-yellow-100 text-yellow-800",
+    }
+    return colors[status] || "bg-gray-100 text-gray-800"
+  }
+
+  const getNextStatus = (currentStatus: string) => {
+    const workflow: Record<string, string> = {
+      confirmed: "preparing",
+      preparing: "ready_for_pickup",
+      ready_for_pickup: "delivered",
+      shipped: "delivered",
+    }
+    return workflow[currentStatus] || null
+  }
+
+  if (loading) {
+    return (
+      <>
+        <AdminNavigation />
+        <main className="min-h-screen bg-off-white flex items-center justify-center">
+          <Loader className="animate-spin text-gold" size={32} />
+        </main>
+        <Footer />
+      </>
+    )
   }
 
   return (
     <>
-      <AdminNavigation userType="staff" />
+      <AdminNavigation />
+      <main className="min-h-screen bg-off-white py-8 px-4 md:px-8">
+        <div className="max-w-7xl mx-auto">
+          <h1 className="font-serif font-bold text-4xl mb-6">Manage Orders</h1>
 
-      <main className="min-h-screen bg-off-white">
-        <section className="py-12 px-4 md:px-8">
-          <div className="max-w-7xl mx-auto">
-            <h1 className="font-serif text-4xl font-bold mb-2">Order Management</h1>
-            <p className="text-gray-600 mb-8">Process and manage customer orders</p>
+          {error && (
+            <Card className="card-base p-4 bg-red-50 border-l-4 border-red-500 mb-6">
+              <div className="flex gap-3">
+                <AlertCircle className="text-red-600 flex-shrink-0" size={20} />
+                <p className="text-red-800">{error}</p>
+              </div>
+            </Card>
+          )}
 
+          {orders.length === 0 ? (
+            <Card className="card-base p-8 text-center">
+              <p className="text-gray-600">No orders found</p>
+            </Card>
+          ) : (
             <div className="space-y-4">
               {orders.map((order) => (
-                <Card key={order.id} className="card-base overflow-hidden">
-                  <div
-                    className="p-6 cursor-pointer hover:bg-gray-50 transition-colors"
-                    onClick={() => setExpandedOrder(expandedOrder === order.id ? null : order.id)}
-                  >
-                    <div className="flex items-center justify-between">
-                      <div className="flex-1">
-                        <div className="flex items-center gap-3 mb-3">
-                          <h3 className="font-serif font-bold text-lg">{order.id}</h3>
-                          <Badge className={`${getStatusColor(orderStatuses[order.id])}`}>
-                            {orderStatuses[order.id]}
-                          </Badge>
-                        </div>
-                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-sm text-gray-600">
-                          <div>
-                            <p className="text-xs text-gray-500">Date</p>
-                            <p className="font-semibold">{new Date(order.date).toLocaleDateString()}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-500">Customer</p>
-                            <p className="font-semibold">{order.customer}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-500">Email</p>
-                            <p className="font-semibold text-xs">{order.email}</p>
-                          </div>
-                          <div>
-                            <p className="text-xs text-gray-500">Total</p>
-                            <p className="font-bold text-coral">{formatPeso(order.total)}</p>
-                          </div>
-                        </div>
+                <Card
+                  key={order._id}
+                  className="card-base p-6 cursor-pointer hover:shadow-lg transition"
+                  onClick={() => setExpandedOrder(expandedOrder === order._id ? null : order._id)}
+                >
+                  <div className="flex justify-between items-start">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-4 mb-2">
+                        <h3 className="font-semibold text-lg">{order.guestName}</h3>
+                        <Badge className={getStatusColor(order.status)}>
+                          {order.status.replace("_", " ").toUpperCase()}
+                        </Badge>
                       </div>
-                      <div className="ml-4">
-                        {expandedOrder === order.id ? (
-                          <ChevronUp size={24} className="text-gold" />
-                        ) : (
-                          <ChevronDown size={24} className="text-gray-400" />
-                        )}
-                      </div>
+                      <p className="text-sm text-gray-600 mb-1">{order.guestEmail}</p>
+                      <p className="text-sm text-gray-600">
+                        {order.deliveryMethod === "pickup" ? " Store Pickup" : " Delivery"}
+                      </p>
+                    </div>
+                    <div className="text-right">
+                      <p className="font-serif font-bold text-xl text-gold">{formatPeso(order.totalAmount)}</p>
+                      <p className="text-xs text-gray-600">
+                        {new Date(order.createdAt).toLocaleDateString()}
+                      </p>
                     </div>
                   </div>
 
-                  {/* Expanded Details */}
-                  {expandedOrder === order.id && (
-                    <div className="border-t border-gray-200 p-6 bg-gray-50">
-                      <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                        {/* Items */}
-                        <div>
-                          <h4 className="font-serif font-bold mb-3">Items</h4>
-                          <div className="bg-cream rounded-lg p-4 space-y-2">
-                            {order.items.map((item, idx) => (
-                              <div key={idx} className="flex justify-between text-sm">
-                                <span>
-                                  {item.title} x{item.quantity}
-                                </span>
-                                <span className="font-semibold">{formatPeso(item.price * item.quantity)}</span>
-                              </div>
-                            ))}
-                          </div>
-                        </div>
+                  {expandedOrder === order._id && (
+                    <div className="mt-6 pt-6 border-t border-gray-200">
+                      <h4 className="font-semibold mb-3">Order Items</h4>
+                      <table className="w-full text-sm mb-6">
+                        <thead>
+                          <tr className="border-b">
+                            <th className="text-left pb-2">Book Title</th>
+                            <th className="text-center pb-2">Qty</th>
+                            <th className="text-right pb-2">Price</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {order.items.map((item, idx) => (
+                            <tr key={idx} className="border-b last:border-0">
+                              <td className="py-2">{item.title}</td>
+                              <td className="text-center">{item.quantity}</td>
+                              <td className="text-right">{formatPeso(item.price * item.quantity)}</td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
 
-                        {/* Shipping Info */}
-                        <div>
-                          <h4 className="font-serif font-bold mb-3">Shipping Information</h4>
-                          <div className="space-y-2 text-sm">
-                            <div className="flex items-center gap-2">
-                              <Mail size={16} className="text-gold" />
-                              <span>{order.email}</span>
-                            </div>
-                            <div className="flex items-center gap-2">
-                              <Phone size={16} className="text-gold" />
-                              <span>{order.phone}</span>
-                            </div>
-                            <div className="flex items-start gap-2">
-                              <MapPin size={16} className="text-gold mt-1 flex-shrink-0" />
-                              <span>{order.address}</span>
-                            </div>
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Order Notes */}
-                      {order.notes && (
-                        <div className="mb-6 p-4 bg-white rounded-lg border border-gray-200">
-                          <p className="text-sm text-gray-600 mb-1">Order Notes</p>
-                          <p className="text-sm">{order.notes}</p>
+                      {order.guestAddress && (
+                        <div className="mb-4 p-3 bg-gray-50 rounded">
+                          <p className="text-xs text-gray-600 mb-1">
+                            {order.deliveryMethod === "pickup" ? "Pickup Location" : "Delivery Address"}
+                          </p>
+                          <p className="text-sm">{order.guestAddress}</p>
                         </div>
                       )}
 
-                      {/* Status Update */}
-                      <div className="flex items-center gap-4">
-                        <label className="text-sm font-semibold">Update Status:</label>
-                        <Select
-                          value={orderStatuses[order.id]}
-                          onValueChange={(value) => handleStatusChange(order.id, value)}
+                      {getNextStatus(order.status) && (
+                        <Button
+                          onClick={(e) => {
+                            e.stopPropagation()
+                            updateOrderStatus(order._id, getNextStatus(order.status)!)
+                          }}
+                          disabled={updatingOrderId === order._id}
+                          className="w-full bg-gold text-white hover:bg-gold/90"
                         >
-                          <SelectTrigger className="w-48">
-                            <SelectValue />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="Pending">Pending</SelectItem>
-                            <SelectItem value="Processing">Processing</SelectItem>
-                            <SelectItem value="Ready for Pickup">Ready for Pickup</SelectItem>
-                            <SelectItem value="Shipped">Shipped</SelectItem>
-                            <SelectItem value="Completed">Completed</SelectItem>
-                            <SelectItem value="Cancelled">Cancelled</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      </div>
+                          {updatingOrderId === order._id ? (
+                            <>
+                              <Loader size={16} className="animate-spin mr-2" />
+                              Updating...
+                            </>
+                          ) : (
+                            `Mark as ${getNextStatus(order.status)?.replace("_", " ").toUpperCase()}`
+                          )}
+                        </Button>
+                      )}
                     </div>
                   )}
                 </Card>
               ))}
             </div>
-          </div>
-        </section>
+          )}
+        </div>
       </main>
-
       <Footer />
     </>
   )
