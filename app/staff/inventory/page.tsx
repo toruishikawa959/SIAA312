@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { AdminNavigation } from "@/components/admin-navigation"
+import { StaffSidebar } from "@/components/staff-sidebar"
+import { PageLoader } from "@/components/page-loader"
 import { Footer } from "@/components/footer"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
@@ -72,15 +73,15 @@ export default function StaffInventory() {
       book.author.toLowerCase().includes(searchTerm.toLowerCase()),
   )
 
-  const handleStockChange = (id, newStock) => {
+  const handleStockChange = (id: number, newStock: number) => {
     setBooks((prev) => prev.map((book) => (book.id === id ? { ...book, stock: Math.max(0, newStock) } : book)))
   }
 
   return (
     <>
-      <AdminNavigation userType="staff" />
-
-      <main className="min-h-screen bg-off-white">
+      <StaffSidebar />
+      <PageLoader />
+      <main className="min-h-screen bg-off-white md:ml-64">
         <section className="py-12 px-4 md:px-8">
           <div className="max-w-7xl mx-auto">
             <h1 className="font-serif text-4xl font-bold mb-2">Inventory Management</h1>
@@ -120,8 +121,11 @@ export default function StaffInventory() {
                     {/* Stock Control */}
                     <div className="flex items-center gap-4">
                       <div className="flex flex-col items-center">
-                        <label className="text-xs text-gray-600 mb-2">Stock</label>
+                        <label htmlFor={`stock-${book.id}`} className="text-xs text-gray-600 mb-2">
+                          Stock
+                        </label>
                         <input
+                          id={`stock-${book.id}`}
                           type="number"
                           value={book.stock}
                           onChange={(e) => handleStockChange(book.id, Number.parseInt(e.target.value) || 0)}

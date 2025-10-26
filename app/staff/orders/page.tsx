@@ -1,7 +1,8 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { AdminNavigation } from "@/components/admin-navigation"
+import { StaffSidebar } from "@/components/staff-sidebar"
+import { PageLoader } from "@/components/page-loader"
 import { Footer } from "@/components/footer"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
@@ -96,8 +97,9 @@ export default function StaffOrders() {
   if (loading) {
     return (
       <>
-        <AdminNavigation />
-        <main className="min-h-screen bg-off-white flex items-center justify-center">
+        <StaffSidebar />
+        <PageLoader />
+        <main className="min-h-screen bg-off-white md:ml-64 flex items-center justify-center">
           <Loader className="animate-spin text-gold" size={32} />
         </main>
         <Footer />
@@ -107,8 +109,9 @@ export default function StaffOrders() {
 
   return (
     <>
-      <AdminNavigation />
-      <main className="min-h-screen bg-off-white py-8 px-4 md:px-8">
+      <StaffSidebar />
+      <PageLoader />
+      <main className="min-h-screen bg-off-white md:ml-64 py-8 px-4 md:px-8">
         <div className="max-w-7xl mx-auto">
           <h1 className="font-serif font-bold text-4xl mb-6">Manage Orders</h1>
 

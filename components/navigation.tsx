@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter } from "next/navigation"
-import { ShoppingCart, Menu, X, User, LogOut } from "lucide-react"
+import { ShoppingCart, Menu, X, User, LogOut, Loader } from "lucide-react"
 import { BookOpen } from "lucide-react"
 
 interface UserSession {
@@ -20,6 +20,7 @@ export function Navigation() {
   const [user, setUser] = useState<UserSession | null>(null)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [mounted, setMounted] = useState(false)
+  const [isLoggingOut, setIsLoggingOut] = useState(false)
 
   useEffect(() => {
     setMounted(true)
@@ -31,11 +32,15 @@ export function Navigation() {
     }
   }, [])
 
-  const handleLogout = () => {
+  const handleLogout = async () => {
+    setIsLoggingOut(true)
+    // Simulate logout process
+    await new Promise(resolve => setTimeout(resolve, 500))
     localStorage.removeItem("user")
     setUser(null)
     setIsLoggedIn(false)
     setShowUserMenu(false)
+    setIsLoggingOut(false)
     router.push("/")
   }
 
@@ -62,9 +67,12 @@ export function Navigation() {
             Catalog
           </Link>
           {isLoggedIn && (
-            <Link href="/orders" className="hover:text-gold transition-colors">
-              My Orders
-            </Link>
+            <>
+              <Link href="/orders" className="hover:text-gold transition-colors">
+                My Orders
+              </Link>
+              
+            </>
           )}
           {user?.role === "admin" && (
             <Link href="/admin/dashboard" className="hover:text-gold transition-colors">
@@ -120,15 +128,32 @@ export function Navigation() {
                   <p className="text-sm text-gray-300">{user?.email}</p>
                   <p className="text-xs text-gold capitalize font-semibold">{user?.role}</p>
                 </div>
+                <Link
+                  href="/profile"
+                  className="block px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-gold transition-colors"
+                  onClick={() => setShowUserMenu(false)}
+                >
+                  My Profile
+                </Link>
                 <button
                   type="button"
                   title="Sign out"
                   aria-label="Sign out"
                   onClick={handleLogout}
-                  className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-coral flex items-center gap-2 transition-colors"
+                  disabled={isLoggingOut}
+                  className="w-full text-left px-4 py-2 text-sm text-gray-300 hover:bg-gray-700 hover:text-coral flex items-center gap-2 transition-colors disabled:opacity-50"
                 >
-                  <LogOut size={16} />
-                  Sign Out
+                  {isLoggingOut ? (
+                    <>
+                      <Loader size={16} className="animate-spin" />
+                      Signing out...
+                    </>
+                  ) : (
+                    <>
+                      <LogOut size={16} />
+                      Sign Out
+                    </>
+                  )}
                 </button>
               </div>
             )}
@@ -162,6 +187,7 @@ export function Navigation() {
                 <Link href="/orders" className="hover:text-gold transition-colors">
                   My Orders
                 </Link>
+                
                 {user?.role === "admin" && (
                   <Link href="/admin/dashboard" className="hover:text-gold transition-colors">
                     Admin Dashboard
@@ -174,10 +200,20 @@ export function Navigation() {
                 )}
                 <button
                   onClick={handleLogout}
-                  className="text-left hover:text-coral transition-colors flex items-center gap-2"
+                  disabled={isLoggingOut}
+                  className="text-left hover:text-coral transition-colors flex items-center gap-2 disabled:opacity-50"
                 >
-                  <LogOut size={16} />
-                  Sign Out
+                  {isLoggingOut ? (
+                    <>
+                      <Loader size={16} className="animate-spin" />
+                      Signing out...
+                    </>
+                  ) : (
+                    <>
+                      <LogOut size={16} />
+                      Sign Out
+                    </>
+                  )}
                 </button>
               </>
             )}

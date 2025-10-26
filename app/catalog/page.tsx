@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import Link from "next/link"
 import { Navigation } from "@/components/navigation"
 import { Footer } from "@/components/footer"
@@ -8,101 +8,50 @@ import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
-import { Search, BookOpen } from "lucide-react"
+import { Search, BookOpen, Loader, Image as ImageIcon } from "lucide-react"
 import { formatPeso } from "@/lib/currency"
 
 interface Book {
-  id: number
-  _id?: string
+  _id: string
   title: string
   author: string
   category: string
   price: number
   stock: number
-  cover: string
+  imageUrl?: string
+  cover?: string
   description?: string
+  volume?: number
 }
 
 export default function Catalog() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
+  const [allBooks, setAllBooks] = useState<Book[]>([])
+  const [loading, setLoading] = useState(true)
+  const [categories, setCategories] = useState<string[]>([])
+  const [imageErrors, setImageErrors] = useState<Set<string>>(new Set())
 
-  const categories = ["Vol. 1", "Vol. 2", "Vol. 3", "Vol. 4"]
+  // Fetch all books from database
+  useEffect(() => {
+    const fetchBooks = async () => {
+      try {
+        const response = await fetch("/api/books")
+        const data = await response.json()
+        setAllBooks(data.books || [])
 
-  const allBooks = [
-    {
-      id: 1,
-      title: "The First Bakla",
-      author: "Mark Dimaisip",
-      category: "Vol. 4",
-      price: 450,
-      stock: 0,
-      cover: "/the-first-bakla-book-cover.jpg",
-    },
-    {
-      id: 2,
-      title: "Heat Index",
-      author: "Genevieve L. Asenjo",
-      category: "Vol. 1",
-      price: 450,
-      stock: 0,
-      cover: "/heat-index-book-cover.jpg",
-    },
-    {
-      id: 3,
-      title: "Altar ng Pangungulila",
-      author: "Edbert Darwin Casten",
-      category: "Vol. 1",
-      price: 450,
-      stock: 0,
-      cover: "/altar-ng-pangungulila-book-cover.jpg",
-    },
-    {
-      id: 4,
-      title: "Lamanglupa Unlimited",
-      author: "Edelio De los Santos",
-      category: "Vol. 1",
-      price: 450,
-      stock: 0,
-      cover: "/lamanglupa-unlimited-book-cover.jpg",
-    },
-    {
-      id: 5,
-      title: "Other Side",
-      author: "Gerome Dela Peña",
-      category: "Vol. 1",
-      price: 450,
-      stock: 0,
-      cover: "/other-side-book-cover.jpg",
-    },
-    {
-      id: 6,
-      title: "Kapag Sinabi ko",
-      author: "Redwin Dob",
-      category: "Vol. 1",
-      price: 450,
-      stock: 0,
-      cover: "/kapag-sinabi-ko-book-cover.jpg",
-    },
-    {
-      id: 7,
-      title: "Lahat Silang Hindi Nahahagip ng Paningin",
-      author: "Klara Espedido",
-      category: "Vol. 1",
-      price: 450,
-      stock: 0,
-      cover: "/lahat-silang-hindi-nahahagip-book-cover.jpg",
-    },
-    {
-      id: 8,
-      title: "Dilat sa Pusikit",
-      author: "Harold Fiesta",
-      category: "Vol. 1",
-      price: 450,
-      stock: 0,
-      cover: "/dilat-sa-pusikit-book-cover.jpg",
-    },
-  ]
+        // Extract unique categories
+        const uniqueCategories = [...new Set((data.books || []).map((book: Book) => book.category))] as string[]
+        setCategories(uniqueCategories.sort())
+      } catch (error) {
+        console.error("Failed to fetch books:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchBooks()
+  }, [])
 
   const filteredBooks = allBooks.filter((book) => {
     const matchesSearch =
@@ -164,29 +113,47 @@ export default function Catalog() {
         {/* Books Grid */}
         <section className="py-12 px-4 md:px-8">
           <div className="max-w-7xl mx-auto">
-            {filteredBooks.length > 0 ? (
+            {loading ? (
+              <div className="flex items-center justify-center py-12">
+                <Loader className="animate-spin text-gold" size={32} />
+                <p className="text-gray-600 ml-4">Loading catalog...</p>
+              </div>
+            ) : filteredBooks.length > 0 ? (
               <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 {filteredBooks.map((book) => (
-                  <Link key={book.id} href={`/book/${book.id}`} className="block">
-                    <div className="overflow-visible hover:shadow-xl transition-all duration-300 h-full cursor-pointer flex flex-col rounded-lg border border-gray-200">
-                      <div className="relative aspect-[3/4] bg-gray-200 overflow-hidden flex-shrink-0 rounded-t-lg -m-px">
-                        <img
-                          src={book.cover || "/placeholder.svg"}
-                          alt={book.title}
-                          className="w-full h-full object-cover"
-                        />
+                  <Link key={book._id} href={`/book/${book._id}`} className="block">
+                    <div className="overflow-hidden hover:shadow-xl transition-all duration-300 h-full cursor-pointer flex flex-col rounded-lg border border-gray-200">
+                      <div className="relative aspect-[3/4] bg-gray-200 overflow-hidden flex-shrink-0 rounded-lg flex items-center justify-center">
+                        {imageErrors.has(book._id) ? (
+                          <div className="flex flex-col items-center justify-center w-full h-full bg-gray-100">
+                            <ImageIcon size={40} className="text-gray-400 mb-2" />
+                            <span className="text-gray-500 text-xs text-center px-2">No Image</span>
+                          </div>
+                        ) : (
+                          <img
+                            src={book.imageUrl || book.cover || "/placeholder.svg"}
+                            alt={book.title}
+                            className="w-full h-full object-cover"
+                            onError={() => {
+                              setImageErrors(prev => new Set([...prev, book._id]))
+                            }}
+                          />
+                        )}
                         {book.stock === 0 && (
                           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
                             <span className="text-white font-bold text-xs">Out of Stock</span>
                           </div>
                         )}
                         <div className="absolute top-2 right-2 badge-gold text-xs">{book.category}</div>
+                        {book.volume && (
+                          <div className="absolute top-2 left-2 badge-coral text-xs">Vol. {book.volume}</div>
+                        )}
                       </div>
                       <div className="p-1.5 flex flex-col flex-grow min-h-0">
                         <h3 className="font-serif font-bold text-xs mb-0.5 line-clamp-2 leading-tight text-center">{book.title}</h3>
                         <p className="text-gray-600 text-xs mb-0.5 line-clamp-1 leading-tight text-center flex-grow">{book.author}</p>
                         <div className="flex items-center justify-center gap-1 mt-auto flex-shrink-0">
-                          <span className="badge-coral text-xs px-1 py-0 whitespace-nowrap">{formatPeso(book.price)}</span>
+                          <span className="badge-coral text-xs px-1 py-0 whitespace-nowrap">₱{book.price.toFixed(2)}</span>
                         </div>
                       </div>
                     </div>

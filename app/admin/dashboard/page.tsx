@@ -1,13 +1,15 @@
 "use client"
 
+import { useEffect, useState } from "react"
 import { AdminNavigation } from "@/components/admin-navigation"
 import { Footer } from "@/components/footer"
 import { Card } from "@/components/ui/card"
-import { DollarSign, Package, BookOpen, Users, AlertCircle } from "lucide-react"
+import { DollarSign, Package, BookOpen, Users, AlertCircle, Loader } from "lucide-react"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
 import { formatPeso, formatPesoShort } from "@/lib/currency"
 
 export default function AdminDashboard() {
+  const [loading, setLoading] = useState(true)
   const stats = [
     { label: "Total Revenue", value: formatPesoShort(76600), icon: DollarSign, color: "text-coral" },
     { label: "Total Orders", value: "200", icon: Package, color: "text-gold" },
@@ -44,7 +46,7 @@ export default function AdminDashboard() {
     { title: "Altar ng Pangungulila", stock: 0 },
   ]
 
-  const getStatusColor = (status) => {
+  const getStatusColor = (status: string) => {
     switch (status) {
       case "Completed":
         return "bg-green-100 text-green-800"
@@ -57,6 +59,29 @@ export default function AdminDashboard() {
       default:
         return "bg-gray-100 text-gray-800"
     }
+  }
+
+  useEffect(() => {
+    // Simulate loading dashboard data
+    const timer = setTimeout(() => {
+      setLoading(false)
+    }, 800)
+
+    return () => clearTimeout(timer)
+  }, [])
+
+  if (loading) {
+    return (
+      <>
+        <AdminNavigation userType="admin" />
+        <main className="min-h-screen bg-off-white flex items-center justify-center">
+          <div className="flex flex-col items-center gap-4">
+            <Loader size={48} className="text-gold animate-spin" />
+            <p className="text-gray-600">Loading dashboard...</p>
+          </div>
+        </main>
+      </>
+    )
   }
 
   return (
@@ -98,7 +123,7 @@ export default function AdminDashboard() {
                     <CartesianGrid strokeDasharray="3 3" />
                     <XAxis dataKey="month" />
                     <YAxis />
-                    <Tooltip formatter={(value) => formatPeso(value)} />
+                    <Tooltip formatter={(value: any) => formatPeso(Number(value))} />
                     <Legend />
                     <Line type="monotone" dataKey="revenue" stroke="#F4B73F" strokeWidth={2} />
                   </LineChart>

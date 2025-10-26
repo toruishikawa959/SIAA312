@@ -9,7 +9,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
-import { BookOpen, AlertCircle } from "lucide-react"
+import { BookOpen, AlertCircle, Loader } from "lucide-react"
 import { getGuestCartForMerge, clearGuestCart } from "@/lib/guest-cart"
 
 export default function LoginPage() {
@@ -171,7 +171,14 @@ export default function LoginPage() {
                 className="w-full bg-gold hover:bg-gold/90 text-charcoal font-semibold"
                 disabled={isLoading}
               >
-                {isLoading ? "Signing in..." : "Sign In"}
+                {isLoading ? (
+                  <div className="flex items-center gap-2">
+                    <Loader size={16} className="animate-spin" />
+                    <span>Signing in...</span>
+                  </div>
+                ) : (
+                  "Sign In"
+                )}
               </Button>
             </form>
 
