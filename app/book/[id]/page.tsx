@@ -6,7 +6,7 @@ import { Navigation } from "@/components/navigation"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { ChevronLeft, Minus, Plus, Package, BookOpen, Loader, ShoppingCart, AlertCircle } from "lucide-react"
+import { ChevronLeft, ChevronRight, Minus, Plus, Package, BookOpen, Loader, ShoppingCart, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { addToGuestCart } from "@/lib/guest-cart"
 import { useRouter } from "next/navigation"
@@ -19,9 +19,14 @@ interface Book {
   price: number
   stock: number
   cover?: string
+  imageUrl?: string
+  images?: string[]
   isbn: string
   publisher: string
   description: string
+  volume?: number
+  seriesId?: string
+  relatedVolumes?: string[]
 }
 
 interface BookParams {
@@ -33,6 +38,7 @@ export default function BookDetails({ params }: { params: Promise<BookParams> })
   const router = useRouter()
   const [quantity, setQuantity] = useState(1)
   const [imageError, setImageError] = useState(false)
+  const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [book, setBook] = useState<Book | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -73,6 +79,59 @@ export default function BookDetails({ params }: { params: Promise<BookParams> })
     )
   }
 
+  if (loading) {
+    return (
+      <>
+        <Navigation />
+        <main className="min-h-screen bg-off-white py-12 px-4 md:px-8">
+          <div className="max-w-7xl mx-auto">
+            {/* Back button skeleton */}
+            <div className="h-5 bg-gray-200 rounded w-32 mb-8 animate-pulse"></div>
+
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
+              {/* Book Cover Skeleton */}
+              <div>
+                <Card className="card-base overflow-hidden">
+                  <div className="aspect-[3/4] bg-gray-300 animate-pulse"></div>
+                </Card>
+              </div>
+
+              {/* Book Info Skeleton */}
+              <div>
+                <div className="h-5 bg-gray-200 rounded w-16 mb-4 animate-pulse"></div>
+                <div className="h-10 bg-gray-300 rounded w-64 mb-2 animate-pulse"></div>
+                <div className="h-6 bg-gray-200 rounded w-48 mb-6 animate-pulse"></div>
+
+                {/* Price Card Skeleton */}
+                <Card className="card-base p-6 mb-6 bg-cream space-y-3">
+                  <div className="flex justify-between">
+                    <div className="h-5 bg-gray-200 rounded w-12 animate-pulse"></div>
+                    <div className="h-8 bg-gray-300 rounded w-24 animate-pulse"></div>
+                  </div>
+                  <div className="h-4 bg-gray-200 rounded w-32 animate-pulse"></div>
+                </Card>
+
+                {/* Description Skeleton */}
+                <div className="mb-8 space-y-2">
+                  <div className="h-4 bg-gray-200 rounded w-full animate-pulse"></div>
+                  <div className="h-4 bg-gray-200 rounded w-full animate-pulse"></div>
+                  <div className="h-4 bg-gray-200 rounded w-3/4 animate-pulse"></div>
+                </div>
+
+                {/* Quantity and Add to Cart Skeleton */}
+                <div className="space-y-4">
+                  <div className="h-10 bg-gray-200 rounded w-32 animate-pulse"></div>
+                  <div className="h-12 bg-gold rounded w-full animate-pulse"></div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </main>
+        <Footer />
+      </>
+    )
+  }
+
   if (error || !book) {
     return (
       <>
@@ -106,10 +165,11 @@ export default function BookDetails({ params }: { params: Promise<BookParams> })
             </Link>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-              {/* Book Cover */}
+              {/* Book Cover with Gallery */}
               <div>
-                <Card className="card-base overflow-hidden">
-                  <div className="aspect-[3/4] bg-gray-200 flex items-center justify-center">
+                {/* Main Image */}
+                <div className="overflow-hidden cursor-pointer flex flex-col rounded-lg border border-gray-200 mb-4">
+                  <div className="aspect-[3/4] bg-gray-200 flex items-center justify-center flex-shrink-0 rounded-lg overflow-hidden relative">
                     {imageError ? (
                       <div className="flex flex-col items-center justify-center w-full h-full bg-gray-100">
                         <BookOpen size={48} className="text-gray-400 mb-2" />
@@ -117,19 +177,75 @@ export default function BookDetails({ params }: { params: Promise<BookParams> })
                       </div>
                     ) : (
                       <img
-                        src={book.cover}
+                        src={book.images && book.images.length > 0 ? book.images[currentImageIndex] : (book.imageUrl || book.cover || "/placeholder.svg")}
                         alt={book.title}
                         className="w-full h-full object-cover"
                         onError={() => setImageError(true)}
                       />
                     )}
                   </div>
-                </Card>
+                </div>
+
+                {/* Image Gallery/Thumbnails */}
+                {book.images && book.images.length > 1 && (
+                  <div className="flex items-center gap-2">
+                    {/* Left Arrow */}
+                    <button
+                      onClick={() => setCurrentImageIndex((prev) => (prev === 0 ? book.images!.length - 1 : prev - 1))}
+                      className="p-2 hover:bg-gray-100 rounded-lg border border-gray-200 transition"
+                      aria-label="Previous image"
+                    >
+                      <ChevronLeft size={20} className="text-charcoal" />
+                    </button>
+
+                    {/* Thumbnails Container */}
+                    <div className="flex-grow overflow-x-auto scrollbar-hide">
+                      <div className="flex gap-2 pb-2">
+                        {book.images.map((img, idx) => (
+                          <button
+                            key={idx}
+                            onClick={() => setCurrentImageIndex(idx)}
+                            className={`flex-shrink-0 w-16 h-20 rounded-lg overflow-hidden border-2 transition ${
+                              currentImageIndex === idx ? "border-gold" : "border-gray-200"
+                            }`}
+                          >
+                            <img
+                              src={img}
+                              alt={`${book.title} - Image ${idx + 1}`}
+                              className="w-full h-full object-cover"
+                            />
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    {/* Right Arrow */}
+                    <button
+                      onClick={() => setCurrentImageIndex((prev) => (prev === book.images!.length - 1 ? 0 : prev + 1))}
+                      className="p-2 hover:bg-gray-100 rounded-lg border border-gray-200 transition"
+                      aria-label="Next image"
+                    >
+                      <ChevronRight size={20} className="text-charcoal" />
+                    </button>
+                  </div>
+                )}
+
+                {/* Image Counter */}
+                {book.images && book.images.length > 1 && (
+                  <p className="text-center text-xs text-gray-500 mt-2">
+                    Image {currentImageIndex + 1} of {book.images.length}
+                  </p>
+                )}
               </div>
 
               {/* Book Info */}
               <div>
-                <div className="badge-gold mb-4 inline-block">{book.category}</div>
+                <div className="flex gap-2 mb-4 items-center flex-wrap">
+                  <div className="badge-gold inline-block">{book.category}</div>
+                  {book.volume && (
+                    <div className="badge-coral inline-block text-sm">Vol. {book.volume}</div>
+                  )}
+                </div>
 
                 <h1 className="font-serif text-4xl font-bold mb-2">{book.title}</h1>
                 <p className="text-gray-600 text-lg mb-6">{book.author}</p>
@@ -151,6 +267,23 @@ export default function BookDetails({ params }: { params: Promise<BookParams> })
                   <h2 className="font-serif font-bold text-xl mb-3">Description</h2>
                   <p className="text-gray-700 leading-relaxed select-text">{book.description}</p>
                 </div>
+
+                {/* Related Volumes */}
+                {book.relatedVolumes && book.relatedVolumes.length > 0 && (
+                  <div className="mb-8 p-4 bg-cream rounded-lg border border-gold/20">
+                    <h2 className="font-serif font-bold text-lg mb-3">📚 Other Volumes in This Series</h2>
+                    <p className="text-sm text-gray-600 mb-3">This book is part of a series. Check out the other volumes:</p>
+                    <div className="flex flex-wrap gap-2">
+                      {book.relatedVolumes.map((volId) => (
+                        <Link key={volId} href={`/book/${volId}`}>
+                          <button className="px-3 py-1.5 bg-gold hover:bg-yellow-500 text-charcoal font-semibold rounded transition text-sm">
+                            View Related Volume →
+                          </button>
+                        </Link>
+                      ))}
+                    </div>
+                  </div>
+                )}
 
                 {/* Book Details */}
                 <div className="mb-8 space-y-3 text-sm">

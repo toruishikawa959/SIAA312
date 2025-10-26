@@ -71,11 +71,51 @@ export default function Cart() {
     return (
       <>
         <Navigation />
-        <main className="min-h-screen bg-off-white flex items-center justify-center">
-          <div className="text-center">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-gold mx-auto"></div>
-            <p className="text-gray-600 mt-4">Loading cart...</p>
-          </div>
+        <main className="min-h-screen bg-off-white">
+          <section className="py-12 px-4 md:px-8">
+            <div className="max-w-7xl mx-auto">
+              {/* Header Skeleton */}
+              <div className="h-10 bg-gray-200 rounded w-48 mb-8 animate-pulse"></div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Cart Items Skeleton */}
+                <div className="lg:col-span-2 space-y-4">
+                  {/* Alert Box Skeleton */}
+                  <Card className="card-base p-4 h-24 bg-gray-100 animate-pulse"></Card>
+
+                  {/* Cart Items */}
+                  {[1, 2, 3].map((i) => (
+                    <Card key={i} className="card-base p-4 flex gap-4">
+                      <div className="w-20 h-28 bg-gray-300 rounded animate-pulse flex-shrink-0"></div>
+                      <div className="flex-1 space-y-2">
+                        <div className="h-5 bg-gray-300 rounded w-32 animate-pulse"></div>
+                        <div className="h-4 bg-gray-200 rounded w-24 animate-pulse"></div>
+                        <div className="flex gap-2 pt-2">
+                          <div className="h-8 bg-gray-300 rounded w-20 animate-pulse"></div>
+                          <div className="h-8 bg-gray-300 rounded w-8 animate-pulse"></div>
+                        </div>
+                      </div>
+                      <div className="h-6 bg-gray-300 rounded w-12 animate-pulse"></div>
+                    </Card>
+                  ))}
+                </div>
+
+                {/* Summary Skeleton */}
+                <Card className="card-base p-6 h-fit space-y-4">
+                  <div className="h-6 bg-gray-300 rounded w-24 animate-pulse mb-4"></div>
+                  {[1, 2, 3, 4].map((i) => (
+                    <div key={i} className="flex justify-between">
+                      <div className="h-4 bg-gray-200 rounded w-16 animate-pulse"></div>
+                      <div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div>
+                    </div>
+                  ))}
+                  <div className="border-t border-gray-200 pt-4">
+                    <div className="h-8 bg-gold rounded w-full animate-pulse"></div>
+                  </div>
+                </Card>
+              </div>
+            </div>
+          </section>
         </main>
         <Footer />
       </>

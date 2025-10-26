@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import Link from "next/link"
 import { Navigation } from "@/components/navigation"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
@@ -9,6 +10,18 @@ import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, BookOpen } from "lucide-react"
 import { formatPeso } from "@/lib/currency"
+
+interface Book {
+  id: number
+  _id?: string
+  title: string
+  author: string
+  category: string
+  price: number
+  stock: number
+  cover: string
+  description?: string
+}
 
 export default function Catalog() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -152,38 +165,32 @@ export default function Catalog() {
         <section className="py-12 px-4 md:px-8">
           <div className="max-w-7xl mx-auto">
             {filteredBooks.length > 0 ? (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+              <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 {filteredBooks.map((book) => (
-                  <Card
-                    key={book.id}
-                    className="card-base overflow-hidden hover:shadow-xl transition-all duration-300 flex flex-col"
-                  >
-                    <div className="relative aspect-[3/4] bg-gray-200 overflow-hidden">
-                      <img
-                        src={book.cover || "/placeholder.svg"}
-                        alt={book.title}
-                        className="w-full h-full object-cover"
-                      />
-                      {book.stock === 0 && (
-                        <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
-                          <span className="text-white font-bold text-lg">Out of Stock</span>
+                  <Link key={book.id} href={`/book/${book.id}`} className="block">
+                    <div className="overflow-visible hover:shadow-xl transition-all duration-300 h-full cursor-pointer flex flex-col rounded-lg border border-gray-200">
+                      <div className="relative aspect-[3/4] bg-gray-200 overflow-hidden flex-shrink-0 rounded-t-lg -m-px">
+                        <img
+                          src={book.cover || "/placeholder.svg"}
+                          alt={book.title}
+                          className="w-full h-full object-cover"
+                        />
+                        {book.stock === 0 && (
+                          <div className="absolute inset-0 bg-black/50 flex items-center justify-center">
+                            <span className="text-white font-bold text-xs">Out of Stock</span>
+                          </div>
+                        )}
+                        <div className="absolute top-2 right-2 badge-gold text-xs">{book.category}</div>
+                      </div>
+                      <div className="p-1.5 flex flex-col flex-grow min-h-0">
+                        <h3 className="font-serif font-bold text-xs mb-0.5 line-clamp-2 leading-tight text-center">{book.title}</h3>
+                        <p className="text-gray-600 text-xs mb-0.5 line-clamp-1 leading-tight text-center flex-grow">{book.author}</p>
+                        <div className="flex items-center justify-center gap-1 mt-auto flex-shrink-0">
+                          <span className="badge-coral text-xs px-1 py-0 whitespace-nowrap">{formatPeso(book.price)}</span>
                         </div>
-                      )}
-                      <div className="absolute top-2 right-2 badge-gold">{book.category}</div>
-                    </div>
-                    <div className="p-4 flex-1 flex flex-col">
-                      <h3 className="font-serif font-bold text-sm mb-1 line-clamp-2">{book.title}</h3>
-                      <p className="text-gray-600 text-xs mb-3">{book.author}</p>
-                      <div className="mt-auto">
-                        <div className="flex items-center justify-between mb-3">
-                          <span className="badge-coral">{formatPeso(book.price)}</span>
-                        </div>
-                        <Button className="btn-primary w-full text-sm py-2" disabled={book.stock === 0}>
-                          Add to Cart
-                        </Button>
                       </div>
                     </div>
-                  </Card>
+                  </Link>
                 ))}
               </div>
             ) : (

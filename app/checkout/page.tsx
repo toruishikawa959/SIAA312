@@ -153,8 +153,73 @@ export default function GuestCheckout() {
     return (
       <>
         <Navigation />
-        <main className="min-h-screen bg-off-white flex items-center justify-center">
-          <Loader className="animate-spin text-gold" size={32} />
+        <main className="min-h-screen bg-off-white">
+          <div className="py-12 px-4 md:px-8">
+            <div className="max-w-6xl mx-auto">
+              {/* Header Skeleton */}
+              <div className="h-10 bg-gray-200 rounded w-48 mb-8 animate-pulse"></div>
+
+              <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
+                {/* Checkout Form Skeleton */}
+                <div className="lg:col-span-2 space-y-6">
+                  {/* Email Section */}
+                  <Card className="card-base p-6 space-y-4">
+                    <div className="h-6 bg-gray-300 rounded w-32 animate-pulse mb-4"></div>
+                    <div className="h-10 bg-gray-200 rounded animate-pulse"></div>
+                  </Card>
+
+                  {/* Delivery Method */}
+                  <Card className="card-base p-6">
+                    <div className="h-6 bg-gray-300 rounded w-40 animate-pulse mb-4"></div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="h-16 bg-gray-200 rounded animate-pulse"></div>
+                      <div className="h-16 bg-gray-200 rounded animate-pulse"></div>
+                    </div>
+                  </Card>
+
+                  {/* Address Form */}
+                  <Card className="card-base p-6 space-y-4">
+                    <div className="h-6 bg-gray-300 rounded w-32 animate-pulse mb-4"></div>
+                    {[1, 2, 3, 4].map((i) => (
+                      <div key={i} className="h-10 bg-gray-200 rounded animate-pulse"></div>
+                    ))}
+                  </Card>
+
+                  {/* Payment Method */}
+                  <Card className="card-base p-6">
+                    <div className="h-6 bg-gray-300 rounded w-40 animate-pulse mb-4"></div>
+                    <div className="h-16 bg-gray-200 rounded animate-pulse"></div>
+                  </Card>
+                </div>
+
+                {/* Order Summary Skeleton */}
+                <Card className="card-base p-6 h-fit space-y-4">
+                  <div className="h-6 bg-gray-300 rounded w-32 animate-pulse mb-4"></div>
+
+                  {/* Items */}
+                  {[1, 2, 3].map((i) => (
+                    <div key={i} className="border-b border-gray-200 pb-3 last:border-0">
+                      <div className="h-4 bg-gray-200 rounded w-full animate-pulse mb-1"></div>
+                      <div className="h-4 bg-gray-200 rounded w-24 animate-pulse"></div>
+                    </div>
+                  ))}
+
+                  {/* Totals */}
+                  <div className="border-t border-gray-200 pt-4 space-y-2">
+                    {[1, 2, 3, 4].map((i) => (
+                      <div key={i} className="flex justify-between">
+                        <div className="h-4 bg-gray-200 rounded w-20 animate-pulse"></div>
+                        <div className="h-4 bg-gray-200 rounded w-16 animate-pulse"></div>
+                      </div>
+                    ))}
+                  </div>
+
+                  {/* Button */}
+                  <div className="h-10 bg-gold rounded animate-pulse"></div>
+                </Card>
+              </div>
+            </div>
+          </div>
         </main>
         <Footer />
       </>

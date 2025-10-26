@@ -12,6 +12,24 @@ export interface Book {
   publisher: string
   publishDate: Date
   imageUrl?: string
+  images?: string[]  // Array of image URLs (1-5+), can be set by staff/admin
+  volume?: number  // Volume number (e.g., 1, 2, 3 for series/volumes)
+  seriesId?: string  // Reference to series (e.g., "anthology-vol-1")
+  relatedVolumes?: string[]  // Array of related book _ids for same series
+  createdAt?: Date
+  updatedAt?: Date
+}
+
+export interface Address {
+  _id?: ObjectId
+  userId: ObjectId
+  label: string // "Home", "Office", "Other"
+  fullAddress: string // Complete address text
+  phone: string // Required for delivery
+  latitude: number // GPS coordinate
+  longitude: number // GPS coordinate
+  details?: string // Apartment, Suite, etc.
+  isDefault?: boolean // Default delivery address
   createdAt?: Date
   updatedAt?: Date
 }
@@ -23,8 +41,8 @@ export interface User {
   firstName: string
   lastName: string
   role: "customer" | "staff" | "admin"
-  address?: string
   phone?: string
+  defaultAddressId?: ObjectId // Reference to default address
   createdAt?: Date
   updatedAt?: Date
 }
@@ -57,11 +75,15 @@ export interface Order {
   guestName?: string
   guestPhone?: string
   guestAddress?: string
+  guestLatitude?: number // GPS coordinate for precise delivery
+  guestLongitude?: number // GPS coordinate for precise delivery
   // Order details
   items: OrderItem[]
   totalAmount: number
   deliveryMethod: "delivery" | "pickup"
   shippingAddress?: string
+  shippingLatitude?: number
+  shippingLongitude?: number
   // Payment & Status
   paymentStatus: "pending" | "paid" | "failed" | "expired"
   paymentMethod?: "qrph" | "card" | "transfer"

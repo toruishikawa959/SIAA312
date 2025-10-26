@@ -14,7 +14,9 @@ interface Book {
   author: string
   category: string
   price: number
+  description?: string
   cover?: string
+  imageUrl?: string
   imageError?: boolean
 }
 
@@ -98,9 +100,23 @@ export default function Home() {
             <h2 className="font-serif text-4xl font-bold mb-12">Featured Books</h2>
             
             {loading ? (
-              <div className="flex items-center justify-center py-12">
-                <Loader className="animate-spin text-gold" size={32} />
-                <span className="ml-3 text-gray-600">Loading featured books...</span>
+              <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                {[1, 2, 3, 4, 5, 6].map((i) => (
+                  <Card key={i} className="card-base overflow-hidden">
+                    {/* Book Cover Skeleton */}
+                    <div className="aspect-[3/4] bg-gray-300 animate-pulse"></div>
+                    {/* Content Skeleton */}
+                    <div className="p-4 space-y-2">
+                      <div className="h-3 bg-gray-200 rounded w-12 animate-pulse"></div>
+                      <div className="h-4 bg-gray-300 rounded w-20 animate-pulse"></div>
+                      <div className="h-3 bg-gray-200 rounded w-16 animate-pulse"></div>
+                      <div className="flex items-center justify-between gap-1 pt-1">
+                        <div className="h-3 bg-gray-300 rounded w-12 animate-pulse"></div>
+                        <div className="h-6 bg-gold rounded w-16 animate-pulse"></div>
+                      </div>
+                    </div>
+                  </Card>
+                ))}
               </div>
             ) : featuredBooks.length === 0 ? (
               <div className="text-center py-12">
@@ -110,39 +126,39 @@ export default function Home() {
                 </Link>
               </div>
             ) : (
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="grid grid-cols-3 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 {featuredBooks.map((book) => (
-                  <Card key={book._id} className="card-base overflow-hidden hover:shadow-xl transition-all duration-300">
-                    <div className="aspect-[3/4] bg-gray-200 overflow-hidden flex items-center justify-center">
-                      {imageErrors.has(book._id) ? (
-                        <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                          <div className="text-center">
-                            <span className="text-gray-400">Book Cover</span>
+                  <Link key={book._id} href={`/book/${book._id}`} className="block">
+                    <div className="overflow-visible hover:shadow-xl transition-all duration-300 h-full cursor-pointer flex flex-col rounded-lg border border-gray-200">
+                      <div className="aspect-[3/4] bg-gray-200 overflow-hidden flex items-center justify-center flex-shrink-0 rounded-t-lg -m-px">
+                        {imageErrors.has(book._id) ? (
+                          <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                            <div className="text-center">
+                              <span className="text-gray-400">Book Cover</span>
+                            </div>
                           </div>
+                        ) : (
+                          <img
+                            src={book.cover || book.imageUrl || "/placeholder.svg"}
+                            alt={book.title}
+                            className="w-full h-full object-cover"
+                            onError={() => {
+                              setImageErrors(prev => new Set([...prev, book._id]))
+                            }}
+                          />
+                        )}
+                      </div>
+                      <div className="p-1.5 flex flex-col flex-grow min-h-0">
+                        <div className="badge-gold mb-0.5 inline-block text-xs mx-auto">{book.category}</div>
+                        <h3 className="font-serif font-bold text-xs mb-0.5 line-clamp-2 leading-tight text-center">{book.title}</h3>
+                        <p className="text-gray-600 text-xs mb-0.5 line-clamp-1 leading-tight text-center">{book.author}</p>
+                        <p className="text-gray-600 text-xs mb-1 line-clamp-2 leading-tight flex-grow text-center">{book.description}</p>
+                        <div className="flex items-center justify-center gap-1 mt-auto flex-shrink-0">
+                          <span className="badge-coral text-xs px-1 py-0 whitespace-nowrap">₱{book.price.toFixed(2)}</span>
                         </div>
-                      ) : (
-                        <img
-                          src={book.cover || "/placeholder.svg"}
-                          alt={book.title}
-                          className="w-full h-full object-cover"
-                          onError={() => {
-                            setImageErrors(prev => new Set([...prev, book._id]))
-                          }}
-                        />
-                      )}
-                    </div>
-                    <div className="p-4">
-                      <div className="badge-gold mb-2 inline-block">{book.category}</div>
-                      <h3 className="font-serif font-bold text-lg mb-1">{book.title}</h3>
-                      <p className="text-gray-600 text-sm mb-4">{book.author}</p>
-                      <div className="flex items-center justify-between">
-                        <span className="badge-coral">${book.price.toFixed(2)}</span>
-                        <Link href={`/book/${book._id}`}>
-                          <Button className="btn-primary text-sm py-2 px-4">Add to Cart</Button>
-                        </Link>
                       </div>
                     </div>
-                  </Card>
+                  </Link>
                 ))}
               </div>
             )}
