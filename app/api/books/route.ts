@@ -33,11 +33,17 @@ export async function GET(request: NextRequest) {
 
     // Get all books with optional filters and limit
     const category = url.searchParams.get("category")
+    const activeOnly = url.searchParams.get("activeOnly") === "true" // New parameter for active books only
     const limit = Math.min(parseInt(url.searchParams.get("limit") || "0") || 0, 100) // Max 100
     const filter: any = {}
 
     if (category) {
       filter.category = category
+    }
+
+    // Filter for active books if requested (for public pages like home and catalog)
+    if (activeOnly) {
+      filter.active = { $ne: false } // Match active: true or undefined
     }
 
     let query = booksCollection.find(filter)

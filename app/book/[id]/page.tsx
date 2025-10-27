@@ -6,7 +6,7 @@ import { Navigation } from "@/components/navigation"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { ChevronLeft, ChevronRight, Minus, Plus, Package, BookOpen, Loader, ShoppingCart, AlertCircle } from "lucide-react"
+import { ChevronLeft, Minus, Plus, Package, BookOpen, Loader, ShoppingCart, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { addToGuestCart } from "@/lib/guest-cart"
 import { useRouter } from "next/navigation"
@@ -18,15 +18,9 @@ interface Book {
   category: string
   price: number
   stock: number
-  cover?: string
-  imageUrl?: string
-  images?: string[]
-  isbn: string
-  publisher: string
+  image?: string
   description: string
-  volume?: number
-  seriesId?: string
-  relatedVolumes?: string[]
+  active?: boolean
 }
 
 interface BookParams {
@@ -38,7 +32,6 @@ export default function BookDetails({ params }: { params: Promise<BookParams> })
   const router = useRouter()
   const [quantity, setQuantity] = useState(1)
   const [imageError, setImageError] = useState(false)
-  const [currentImageIndex, setCurrentImageIndex] = useState(0)
   const [book, setBook] = useState<Book | null>(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
@@ -177,7 +170,7 @@ export default function BookDetails({ params }: { params: Promise<BookParams> })
                       </div>
                     ) : (
                       <img
-                        src={book.images && book.images.length > 0 ? book.images[currentImageIndex] : (book.imageUrl || book.cover || "/placeholder.svg")}
+                        src={book.image || "/placeholder.svg"}
                         alt={book.title}
                         className="w-full h-full object-cover"
                         onError={() => setImageError(true)}
@@ -186,118 +179,34 @@ export default function BookDetails({ params }: { params: Promise<BookParams> })
                   </div>
                 </div>
 
-                {/* Image Gallery/Thumbnails */}
-                {book.images && book.images.length > 1 && (
-                  <div className="flex items-center gap-2">
-                    {/* Left Arrow */}
-                    <button
-                      onClick={() => setCurrentImageIndex((prev) => (prev === 0 ? book.images!.length - 1 : prev - 1))}
-                      className="p-2 hover:bg-gray-100 rounded-lg border border-gray-200 transition"
-                      aria-label="Previous image"
-                    >
-                      <ChevronLeft size={20} className="text-charcoal" />
-                    </button>
+                {/* Book Info */}
+                <div>
+                  <div className="flex gap-2 mb-4 items-center flex-wrap">
+                    <div className="badge-gold inline-block">{book.category}</div>
+                  </div>
 
-                    {/* Thumbnails Container */}
-                    <div className="flex-grow overflow-x-auto scrollbar-hide">
-                      <div className="flex gap-2 pb-2">
-                        {book.images.map((img, idx) => (
-                          <button
-                            key={idx}
-                            onClick={() => setCurrentImageIndex(idx)}
-                            className={`flex-shrink-0 w-16 h-20 rounded-lg overflow-hidden border-2 transition ${
-                              currentImageIndex === idx ? "border-gold" : "border-gray-200"
-                            }`}
-                          >
-                            <img
-                              src={img}
-                              alt={`${book.title} - Image ${idx + 1}`}
-                              className="w-full h-full object-cover"
-                            />
-                          </button>
-                        ))}
-                      </div>
+                  <h1 className="font-serif text-4xl font-bold mb-2">{book.title}</h1>
+                  <p className="text-gray-600 text-lg mb-6">{book.author}</p>
+
+                  {/* Price Card */}
+                  <Card className="card-base p-6 mb-6 bg-cream">
+                    <div className="flex items-center justify-between mb-4">
+                      <span className="text-gray-600">Price</span>
+                      <span className="text-coral font-bold text-3xl">₱{book.price.toFixed(2)}</span>
                     </div>
-
-                    {/* Right Arrow */}
-                    <button
-                      onClick={() => setCurrentImageIndex((prev) => (prev === book.images!.length - 1 ? 0 : prev + 1))}
-                      className="p-2 hover:bg-gray-100 rounded-lg border border-gray-200 transition"
-                      aria-label="Next image"
-                    >
-                      <ChevronRight size={20} className="text-charcoal" />
-                    </button>
-                  </div>
-                )}
-
-                {/* Image Counter */}
-                {book.images && book.images.length > 1 && (
-                  <p className="text-center text-xs text-gray-500 mt-2">
-                    Image {currentImageIndex + 1} of {book.images.length}
-                  </p>
-                )}
-              </div>
-
-              {/* Book Info */}
-              <div>
-                <div className="flex gap-2 mb-4 items-center flex-wrap">
-                  <div className="badge-gold inline-block">{book.category}</div>
-                  {book.volume && (
-                    <div className="badge-coral inline-block text-sm">Vol. {book.volume}</div>
-                  )}
-                </div>
-
-                <h1 className="font-serif text-4xl font-bold mb-2">{book.title}</h1>
-                <p className="text-gray-600 text-lg mb-6">{book.author}</p>
-
-                {/* Price Card */}
-                <Card className="card-base p-6 mb-6 bg-cream">
-                  <div className="flex items-center justify-between mb-4">
-                    <span className="text-gray-600">Price</span>
-                    <span className="text-coral font-bold text-3xl">${book.price.toFixed(2)}</span>
-                  </div>
-                  <div className="flex items-center gap-2">
-                    <Package size={20} className="text-gold" />
-                    <span className="text-sm">{book.stock > 0 ? `${book.stock} in stock` : "Out of stock"}</span>
-                  </div>
-                </Card>
-
-                {/* Description */}
-                <div className="mb-8">
-                  <h2 className="font-serif font-bold text-xl mb-3">Description</h2>
-                  <p className="text-gray-700 leading-relaxed select-text">{book.description}</p>
-                </div>
-
-                {/* Related Volumes */}
-                {book.relatedVolumes && book.relatedVolumes.length > 0 && (
-                  <div className="mb-8 p-4 bg-cream rounded-lg border border-gold/20">
-                    <h2 className="font-serif font-bold text-lg mb-3">📚 Other Volumes in This Series</h2>
-                    <p className="text-sm text-gray-600 mb-3">This book is part of a series. Check out the other volumes:</p>
-                    <div className="flex flex-wrap gap-2">
-                      {book.relatedVolumes.map((volId) => (
-                        <Link key={volId} href={`/book/${volId}`}>
-                          <button className="px-3 py-1.5 bg-gold hover:bg-yellow-500 text-charcoal font-semibold rounded transition text-sm">
-                            View Related Volume →
-                          </button>
-                        </Link>
-                      ))}
+                    <div className="flex items-center gap-2">
+                      <Package size={20} className="text-gold" />
+                      <span className="text-sm">{book.stock > 0 ? `${book.stock} in stock` : "Out of stock"}</span>
                     </div>
-                  </div>
-                )}
+                  </Card>
 
-                {/* Book Details */}
-                <div className="mb-8 space-y-3 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">ISBN</span>
-                    <span className="font-semibold">{book.isbn}</span>
+                  {/* Description */}
+                  <div className="mb-8">
+                    <h2 className="font-serif font-bold text-xl mb-3">Description</h2>
+                    <p className="text-gray-700 leading-relaxed select-text">{book.description}</p>
                   </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-600">Publisher</span>
-                    <span className="font-semibold">{book.publisher}</span>
-                  </div>
-                </div>
 
-                {/* Quantity Selector */}
+                  {/* Quantity Selector */}
                 <div className="mb-8">
                   <label className="block text-sm font-semibold mb-3">Quantity</label>
                   <div className="flex items-center gap-4">
@@ -345,7 +254,7 @@ export default function BookDetails({ params }: { params: Promise<BookParams> })
                           author: book.author,
                           price: book.price,
                           quantity: quantity,
-                          cover: book.cover,
+                          image: book.image,
                         })
 
                         setAddedToCart(true)

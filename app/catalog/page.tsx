@@ -18,10 +18,9 @@ interface Book {
   category: string
   price: number
   stock: number
-  imageUrl?: string
-  cover?: string
+  image?: string
   description?: string
-  volume?: number
+  active?: boolean
 }
 
 export default function Catalog() {
@@ -36,7 +35,7 @@ export default function Catalog() {
   useEffect(() => {
     const fetchBooks = async () => {
       try {
-        const response = await fetch("/api/books")
+        const response = await fetch("/api/books?activeOnly=true")
         const data = await response.json()
         setAllBooks(data.books || [])
 
@@ -131,7 +130,7 @@ export default function Catalog() {
                           </div>
                         ) : (
                           <img
-                            src={book.imageUrl || book.cover || "/placeholder.svg"}
+                            src={book.image || "/placeholder.svg"}
                             alt={book.title}
                             className="w-full h-full object-cover"
                             onError={() => {
@@ -145,9 +144,6 @@ export default function Catalog() {
                           </div>
                         )}
                         <div className="absolute top-2 right-2 badge-gold text-xs">{book.category}</div>
-                        {book.volume && (
-                          <div className="absolute top-2 left-2 badge-coral text-xs">Vol. {book.volume}</div>
-                        )}
                       </div>
                       <div className="p-1.5 flex flex-col flex-grow min-h-0">
                         <h3 className="font-serif font-bold text-xs mb-0.5 line-clamp-2 leading-tight text-center">{book.title}</h3>

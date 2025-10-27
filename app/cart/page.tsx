@@ -170,9 +170,9 @@ export default function Cart() {
                   {cartItems.map((item) => (
                     <Card key={item.bookId} className="card-base p-4 flex gap-4">
                       <div className="w-20 h-28 bg-gray-200 rounded overflow-hidden flex-shrink-0">
-                        {item.cover ? (
+                        {item.image ? (
                           <img
-                            src={item.cover}
+                            src={item.image}
                             alt={item.title}
                             className="w-full h-full object-cover"
                           />

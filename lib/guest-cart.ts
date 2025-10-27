@@ -6,7 +6,7 @@ export interface GuestCartItem {
   author: string
   price: number
   quantity: number
-  cover?: string
+  image?: string
 }
 
 const GUEST_CART_KEY = "guest_cart"

@@ -15,8 +15,8 @@ interface Book {
   category: string
   price: number
   description?: string
-  cover?: string
-  imageUrl?: string
+  image?: string
+  active?: boolean
   imageError?: boolean
 }
 
@@ -28,7 +28,7 @@ export default function Home() {
   useEffect(() => {
     const fetchFeaturedBooks = async () => {
       try {
-        const response = await fetch("/api/books?limit=6")
+        const response = await fetch("/api/books?limit=6&activeOnly=true")
         const data = await response.json()
         setFeaturedBooks(data.books || [])
       } catch (error) {
@@ -139,7 +139,7 @@ export default function Home() {
                           </div>
                         ) : (
                           <img
-                            src={book.cover || book.imageUrl || "/placeholder.svg"}
+                            src={book.image || "/placeholder.svg"}
                             alt={book.title}
                             className="w-full h-full object-cover"
                             onError={() => {
