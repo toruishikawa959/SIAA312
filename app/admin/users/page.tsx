@@ -8,14 +8,25 @@ import { Badge } from "@/components/ui/badge"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Button } from "@/components/ui/button"
+import { ProtectedRoute } from "@/components/protected-route"
 import { Search, Edit2, X, Calendar, DollarSign, Package } from "lucide-react"
+
+interface User {
+  id: number
+  name: string
+  email: string
+  role: "customer" | "staff" | "admin"
+  registeredDate: string
+  orders: number
+  totalSpent: number
+}
 
 export default function AdminUsers() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedRole, setSelectedRole] = useState("all")
   const [showModal, setShowModal] = useState(false)
-  const [editingUser, setEditingUser] = useState(null)
-  const [users, setUsers] = useState([
+  const [editingUser, setEditingUser] = useState<User | null>(null)
+  const [users, setUsers] = useState<User[]>([
     {
       id: 1,
       name: "Sarah Johnson",
@@ -82,7 +93,7 @@ export default function AdminUsers() {
     return matchesSearch && matchesRole
   })
 
-  const getRoleColor = (role) => {
+  const getRoleColor = (role: string): string => {
     switch (role) {
       case "customer":
         return "bg-blue-100 text-blue-800"
@@ -95,30 +106,31 @@ export default function AdminUsers() {
     }
   }
 
-  const handleOpenModal = (user) => {
+  const handleOpenModal = (user: User): void => {
     setEditingUser(user)
     setNewRole(user.role)
     setShowModal(true)
   }
 
-  const handleCloseModal = () => {
+  const handleCloseModal = (): void => {
     setShowModal(false)
     setEditingUser(null)
     setNewRole("")
   }
 
-  const handleSaveRole = () => {
+  const handleSaveRole = (): void => {
     if (editingUser && newRole !== editingUser.role) {
-      setUsers((prev) => prev.map((user) => (user.id === editingUser.id ? { ...user, role: newRole } : user)))
+      setUsers((prev) => prev.map((user) => (user.id === editingUser.id ? { ...user, role: newRole as "customer" | "staff" | "admin" } : user)))
     }
     handleCloseModal()
   }
 
   return (
-    <>
-      <AdminNavigation userType="admin" />
+    <ProtectedRoute requiredRole="admin">
+      <>
+        <AdminNavigation userType="admin" />
 
-      <main className="min-h-screen bg-off-white">
+        <main className="min-h-screen bg-off-white">
         <section className="py-12 px-4 md:px-8">
           <div className="max-w-7xl mx-auto">
             <h1 className="font-serif text-4xl font-bold mb-2">User Management</h1>
@@ -161,8 +173,11 @@ export default function AdminUsers() {
                       </Badge>
                     </div>
                     <button
+                      type="button"
                       onClick={() => handleOpenModal(user)}
                       className="p-2 hover:bg-cream rounded-lg transition-colors"
+                      title="Edit user role"
+                      aria-label="Edit user role"
                     >
                       <Edit2 size={20} className="text-gold" />
                     </button>
@@ -204,7 +219,13 @@ export default function AdminUsers() {
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="font-serif text-2xl font-bold">Edit User Role</h2>
-                <button onClick={handleCloseModal} className="p-1 hover:bg-gray-100 rounded">
+                <button
+                  type="button"
+                  onClick={handleCloseModal}
+                  className="p-1 hover:bg-gray-100 rounded"
+                  title="Close modal"
+                  aria-label="Close modal"
+                >
                   <X size={24} />
                 </button>
               </div>
@@ -254,6 +275,7 @@ export default function AdminUsers() {
       )}
 
       <Footer />
-    </>
+      </>
+    </ProtectedRoute>
   )
 }

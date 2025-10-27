@@ -3,8 +3,8 @@
 import { useEffect, useState } from "react"
 import { StaffSidebar } from "@/components/staff-sidebar"
 import { PageLoader } from "@/components/page-loader"
-import { Footer } from "@/components/footer"
 import { Card } from "@/components/ui/card"
+import { ProtectedRoute } from "@/components/protected-route"
 import { Package, ShoppingCart, AlertCircle, TrendingUp, Loader, Clock, CheckCircle } from "lucide-react"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, BarChart, Bar } from "recharts"
 import { formatPeso } from "@/lib/currency"
@@ -24,8 +24,18 @@ interface RevenueData {
   orders: number
 }
 
+interface RecentOrder {
+  _id: string
+  guestName: string
+  totalAmount: number
+  status: string
+  createdAt: string
+  itemCount: number
+}
+
 export default function StaffDashboard() {
   const [loading, setLoading] = useState(true)
+  const [error, setError] = useState("")
   const [stats, setStats] = useState<DashboardStats>({
     totalOrders: 0,
     pendingOrders: 0,
@@ -35,7 +45,7 @@ export default function StaffDashboard() {
     totalInventory: 0,
   })
   const [revenueData, setRevenueData] = useState<RevenueData[]>([])
-  const [recentOrders, setRecentOrders] = useState([])
+  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([])
 
   useEffect(() => {
     fetchDashboardData()
@@ -44,40 +54,23 @@ export default function StaffDashboard() {
   const fetchDashboardData = async () => {
     try {
       setLoading(true)
-      // Fetch orders data
-      const ordersRes = await fetch("/api/admin/orders")
-      const ordersData = ordersRes.ok ? await ordersRes.json() : { orders: [] }
+      setError("")
+      
+      // Fetch real data from staff stats endpoint
+      const statsRes = await fetch("/api/staff/stats")
+      
+      if (!statsRes.ok) {
+        throw new Error("Failed to fetch dashboard stats")
+      }
 
-      // Calculate stats from orders
-      const orders = ordersData.orders || []
-      const totalOrders = orders.length
-      const pendingOrders = orders.filter((o: any) => o.status === "pending" || o.status === "confirmed").length
-      const completedOrders = orders.filter((o: any) => o.status === "delivered" || o.status === "completed").length
-      const totalRevenue = orders.reduce((sum: number, o: any) => sum + (o.totalAmount || 0), 0)
+      const data = await statsRes.json()
 
-      // Generate mock revenue data for chart
-      const mockRevenueData = [
-        { date: "Mon", revenue: 2400, orders: 4 },
-        { date: "Tue", revenue: 1398, orders: 3 },
-        { date: "Wed", revenue: 9800, orders: 8 },
-        { date: "Thu", revenue: 3908, orders: 5 },
-        { date: "Fri", revenue: 4800, orders: 6 },
-        { date: "Sat", revenue: 3800, orders: 4 },
-        { date: "Sun", revenue: 4300, orders: 5 },
-      ]
-
-      setStats({
-        totalOrders,
-        pendingOrders,
-        completedOrders,
-        totalRevenue,
-        lowStockItems: 5, // Mock data
-        totalInventory: 245, // Mock data
-      })
-      setRevenueData(mockRevenueData)
-      setRecentOrders(orders.slice(0, 5))
-    } catch (error) {
-      console.error("Failed to fetch dashboard data:", error)
+      setStats(data.stats)
+      setRevenueData(data.revenueData)
+      setRecentOrders(data.recentOrders)
+    } catch (err) {
+      console.error("Failed to fetch dashboard data:", err)
+      setError("Failed to load dashboard data. Please refresh the page.")
     } finally {
       setLoading(false)
     }
@@ -129,10 +122,30 @@ export default function StaffDashboard() {
     )
   }
 
+  if (error) {
+    return (
+      <>
+        <StaffSidebar />
+        <PageLoader />
+        <main className="min-h-screen bg-off-white md:ml-64 py-8 px-4 md:px-8">
+          <div className="max-w-7xl mx-auto">
+            <Card className="card-base p-6 bg-coral/10 border-2 border-coral">
+              <div className="flex items-center gap-4">
+                <AlertCircle className="text-coral flex-shrink-0" size={24} />
+                <p className="text-coral font-semibold">{error}</p>
+              </div>
+            </Card>
+          </div>
+        </main>
+      </>
+    )
+  }
+
   return (
-    <>
-      <StaffSidebar />
-      <PageLoader />
+    <ProtectedRoute requiredRole="staff">
+      <>
+        <StaffSidebar />
+        <PageLoader />
       <main className="min-h-screen bg-off-white md:ml-64 py-8 px-4 md:px-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
@@ -205,16 +218,18 @@ export default function StaffDashboard() {
                     <tr className="border-b border-gray-200">
                       <th className="text-left py-3 px-4 font-semibold text-gray-700">Order ID</th>
                       <th className="text-left py-3 px-4 font-semibold text-gray-700">Customer</th>
+                      <th className="text-left py-3 px-4 font-semibold text-gray-700">Items</th>
                       <th className="text-left py-3 px-4 font-semibold text-gray-700">Amount</th>
                       <th className="text-left py-3 px-4 font-semibold text-gray-700">Status</th>
                       <th className="text-left py-3 px-4 font-semibold text-gray-700">Date</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {recentOrders.map((order: any, idx) => (
-                      <tr key={idx} className="border-b border-gray-100 hover:bg-gray-50">
-                        <td className="py-3 px-4 text-sm font-mono">{order._id?.slice(-6) || "N/A"}</td>
-                        <td className="py-3 px-4 text-sm">{order.guestName || "Guest"}</td>
+                    {recentOrders.map((order) => (
+                      <tr key={order._id} className="border-b border-gray-100 hover:bg-gray-50">
+                        <td className="py-3 px-4 text-sm font-mono">{order._id.slice(-6)}</td>
+                        <td className="py-3 px-4 text-sm">{order.guestName}</td>
+                        <td className="py-3 px-4 text-sm text-gray-600">{order.itemCount} item(s)</td>
                         <td className="py-3 px-4 text-sm font-semibold">{formatPeso(order.totalAmount)}</td>
                         <td className="py-3 px-4 text-sm">
                           <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
@@ -222,7 +237,9 @@ export default function StaffDashboard() {
                               ? "bg-green-100 text-green-800"
                               : order.status === "pending"
                               ? "bg-yellow-100 text-yellow-800"
-                              : "bg-blue-100 text-blue-800"
+                              : order.status === "confirmed"
+                              ? "bg-blue-100 text-blue-800"
+                              : "bg-gray-100 text-gray-800"
                           }`}>
                             {order.status}
                           </span>
@@ -245,14 +262,16 @@ export default function StaffDashboard() {
               <div>
                 <h3 className="font-semibold text-yellow-900 mb-2">Low Stock Alert</h3>
                 <p className="text-sm text-yellow-800">
-                  {stats.lowStockItems} items are running low on stock. Visit the inventory section to manage stock levels.
+                  {stats.lowStockItems === 0
+                    ? "All items are well-stocked!"
+                    : `${stats.lowStockItems} item(s) are running low on stock (< 5 units). Visit the inventory section to manage stock levels.`}
                 </p>
               </div>
             </div>
-          </Card>
-        </div>
-      </main>
-      <Footer />
-    </>
+            </Card>
+          </div>
+        </main>
+      </>
+    </ProtectedRoute>
   )
 }

@@ -5,6 +5,7 @@ import { Navigation } from "@/components/navigation"
 import { Footer } from "@/components/footer"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
+import { ProtectedRoute } from "@/components/protected-route"
 import { AlertCircle, Trash2, RotateCcw } from "lucide-react"
 import Link from "next/link"
 
@@ -59,10 +60,11 @@ export default function DataManagement() {
   }
 
   return (
-    <>
-      <Navigation />
+    <ProtectedRoute requiredRole="admin">
+      <>
+        <Navigation />
 
-      <main className="min-h-screen bg-off-white py-12 px-4 md:px-8">
+        <main className="min-h-screen bg-off-white py-12 px-4 md:px-8">
         <div className="max-w-2xl mx-auto">
           <div className="mb-8">
             <Link href="/admin/dashboard" className="text-gold hover:text-yellow-500 text-sm mb-4 inline-block">
@@ -182,6 +184,7 @@ export default function DataManagement() {
       </main>
 
       <Footer />
-    </>
+      </>
+    </ProtectedRoute>
   )
 }

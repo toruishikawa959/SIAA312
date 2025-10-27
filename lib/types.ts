@@ -4,18 +4,12 @@ export interface Book {
   _id?: ObjectId
   title: string
   author: string
-  isbn: string
   price: number
   description: string
   category: string
   stock: number
-  publisher: string
-  publishDate: Date
-  imageUrl?: string
-  images?: string[]  // Array of image URLs (1-5+), can be set by staff/admin
-  volume?: number  // Volume number (e.g., 1, 2, 3 for series/volumes)
-  seriesId?: string  // Reference to series (e.g., "anthology-vol-1")
-  relatedVolumes?: string[]  // Array of related book _ids for same series
+  image?: string  // Base64 encoded image
+  active?: boolean  // Book availability status
   createdAt?: Date
   updatedAt?: Date
 }

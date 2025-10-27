@@ -22,7 +22,13 @@ export async function GET(request: NextRequest) {
         return NextResponse.json({ error: "Book not found" }, { status: 404 })
       }
 
-      return NextResponse.json(book, { status: 200 })
+      // Ensure active property is set (default to true if not set)
+      const bookWithActive = {
+        ...book,
+        active: book.active !== false,
+      }
+
+      return NextResponse.json(bookWithActive, { status: 200 })
     }
 
     // Get all books with optional filters and limit
@@ -42,7 +48,13 @@ export async function GET(request: NextRequest) {
 
     const books = await query.toArray()
 
-    return NextResponse.json({ books }, { status: 200 })
+    // Ensure all books have active property (default to true if not set)
+    const booksWithActive = books.map((book) => ({
+      ...book,
+      active: book.active !== false, // Treat undefined as true
+    }))
+
+    return NextResponse.json({ books: booksWithActive }, { status: 200 })
   } catch (error) {
     console.error("Error fetching books:", error)
     return NextResponse.json({ error: "Failed to fetch books" }, { status: 500 })
@@ -57,9 +69,9 @@ export async function POST(request: NextRequest) {
     const body = await request.json()
 
     // Validate required fields
-    if (!body.title || !body.author || !body.isbn || !body.price) {
+    if (!body.title || !body.author || !body.price) {
       return NextResponse.json(
-        { error: "Missing required fields: title, author, isbn, price" },
+        { error: "Missing required fields: title, author, price" },
         { status: 400 }
       )
     }
@@ -67,14 +79,12 @@ export async function POST(request: NextRequest) {
     const newBook: Book = {
       title: body.title,
       author: body.author,
-      isbn: body.isbn,
       price: body.price,
       description: body.description || "",
       category: body.category || "Uncategorized",
       stock: body.stock || 0,
-      publisher: body.publisher || "",
-      publishDate: new Date(body.publishDate) || new Date(),
-      imageUrl: body.imageUrl || "",
+      image: body.image || "", // Base64 encoded image
+      active: true,
       createdAt: new Date(),
       updatedAt: new Date(),
     }
@@ -88,5 +98,53 @@ export async function POST(request: NextRequest) {
   } catch (error) {
     console.error("Error creating book:", error)
     return NextResponse.json({ error: "Failed to create book" }, { status: 500 })
+  }
+}
+
+export async function PUT(request: NextRequest) {
+  try {
+    const { db } = await connectToDatabase()
+    const booksCollection = db.collection<Book>("books")
+
+    const body = await request.json()
+
+    // Validate required fields
+    if (!body._id) {
+      return NextResponse.json(
+        { error: "Missing required field: _id" },
+        { status: 400 }
+      )
+    }
+
+    const updateData: any = {}
+
+    // Update specific fields if provided
+    if (body.title !== undefined) updateData.title = body.title
+    if (body.author !== undefined) updateData.author = body.author
+    if (body.price !== undefined) updateData.price = body.price
+    if (body.stock !== undefined) updateData.stock = body.stock
+    if (body.description !== undefined) updateData.description = body.description
+    if (body.category !== undefined) updateData.category = body.category
+    if (body.image !== undefined) updateData.image = body.image
+    if (body.active !== undefined) updateData.active = body.active
+
+    updateData.updatedAt = new Date()
+
+    const result = await booksCollection.updateOne(
+      { _id: new ObjectId(body._id) },
+      { $set: updateData }
+    )
+
+    if (result.matchedCount === 0) {
+      return NextResponse.json({ error: "Book not found" }, { status: 404 })
+    }
+
+    return NextResponse.json(
+      { message: "Book updated successfully", modifiedCount: result.modifiedCount },
+      { status: 200 }
+    )
+  } catch (error) {
+    console.error("Error updating book:", error)
+    return NextResponse.json({ error: "Failed to update book" }, { status: 500 })
   }
 }

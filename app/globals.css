@@ -163,4 +163,15 @@
   .badge-coral {
     @apply bg-coral text-white px-3 py-1 rounded-full text-sm font-semibold;
   }
+
+  .crop-container {
+    @apply relative bg-black rounded overflow-hidden mx-auto;
+    width: 300px;
+    height: 420px;
+  }
+
+  .crop-image {
+    @apply absolute w-full h-full object-cover cursor-move;
+    transform-origin: center;
+  }
 }

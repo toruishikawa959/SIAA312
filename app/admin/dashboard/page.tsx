@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { AdminNavigation } from "@/components/admin-navigation"
 import { Footer } from "@/components/footer"
 import { Card } from "@/components/ui/card"
+import { ProtectedRoute } from "@/components/protected-route"
 import { DollarSign, Package, BookOpen, Users, AlertCircle, Loader } from "lucide-react"
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
 import { formatPeso, formatPesoShort } from "@/lib/currency"
@@ -85,10 +86,11 @@ export default function AdminDashboard() {
   }
 
   return (
-    <>
-      <AdminNavigation userType="admin" />
+    <ProtectedRoute requiredRole="admin">
+      <>
+        <AdminNavigation userType="admin" />
 
-      <main className="min-h-screen bg-off-white">
+        <main className="min-h-screen bg-off-white">
         <section className="py-12 px-4 md:px-8">
           <div className="max-w-7xl mx-auto">
             <h1 className="font-serif text-4xl font-bold mb-8">Admin Dashboard</h1>
@@ -206,6 +208,7 @@ export default function AdminDashboard() {
       </main>
 
       <Footer />
-    </>
+      </>
+    </ProtectedRoute>
   )
 }

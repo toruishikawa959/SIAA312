@@ -7,14 +7,43 @@ import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
+import { ProtectedRoute } from "@/components/protected-route"
 import { Search, Plus, Edit2, Trash2, AlertCircle, X } from "lucide-react"
+
+interface BookItem {
+  id: number
+  title: string
+  author: string
+  category: string
+  price: number
+  stock: number
+  cover: string
+  isbn: string
+  publisher: string
+  description: string
+  featured: boolean
+}
+
+interface FormDataType {
+  title: string
+  author: string
+  category: string
+  price: string
+  stock: string
+  isbn: string
+  publisher: string
+  description: string
+  featured: boolean
+  id?: number
+  cover?: string
+}
 
 export default function AdminInventory() {
   const [searchTerm, setSearchTerm] = useState("")
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [showModal, setShowModal] = useState(false)
-  const [editingBook, setEditingBook] = useState(null)
-  const [books, setBooks] = useState([
+  const [editingBook, setEditingBook] = useState<BookItem | null>(null)
+  const [books, setBooks] = useState<BookItem[]>([
     {
       id: 1,
       title: "The Art of Listening",
@@ -69,7 +98,7 @@ export default function AdminInventory() {
     },
   ])
 
-  const [formData, setFormData] = useState({
+  const [formData, setFormData] = useState<FormDataType>({
     title: "",
     author: "",
     category: "Fiction",
@@ -91,10 +120,22 @@ export default function AdminInventory() {
     return matchesSearch && matchesCategory
   })
 
-  const handleOpenModal = (book = null) => {
+  const handleOpenModal = (book?: BookItem): void => {
     if (book) {
       setEditingBook(book)
-      setFormData(book)
+      setFormData({
+        title: book.title,
+        author: book.author,
+        category: book.category,
+        price: book.price.toString(),
+        stock: book.stock.toString(),
+        isbn: book.isbn,
+        publisher: book.publisher,
+        description: book.description,
+        featured: book.featured,
+        id: book.id,
+        cover: book.cover,
+      })
     } else {
       setEditingBook(null)
       setFormData({
@@ -112,41 +153,66 @@ export default function AdminInventory() {
     setShowModal(true)
   }
 
-  const handleCloseModal = () => {
+  const handleCloseModal = (): void => {
     setShowModal(false)
     setEditingBook(null)
   }
 
-  const handleSaveBook = () => {
+  const handleSaveBook = (): void => {
     if (editingBook) {
-      setBooks((prev) => prev.map((book) => (book.id === editingBook.id ? { ...book, ...formData } : book)))
+      setBooks((prev) =>
+        prev.map((book) =>
+          book.id === editingBook.id
+            ? {
+                ...book,
+                title: formData.title,
+                author: formData.author,
+                category: formData.category,
+                price: parseFloat(formData.price),
+                stock: parseInt(formData.stock),
+                isbn: formData.isbn,
+                publisher: formData.publisher,
+                description: formData.description,
+                featured: formData.featured,
+              }
+            : book
+        )
+      )
     } else {
       setBooks((prev) => [
         ...prev,
         {
           id: Math.max(...prev.map((b) => b.id), 0) + 1,
-          ...formData,
-          price: Number.parseFloat(formData.price),
-          stock: Number.parseInt(formData.stock),
+          title: formData.title,
+          author: formData.author,
+          category: formData.category,
+          price: parseFloat(formData.price),
+          stock: parseInt(formData.stock),
+          isbn: formData.isbn,
+          publisher: formData.publisher,
+          description: formData.description,
+          featured: formData.featured,
+          cover: "/placeholder.svg",
         },
       ])
     }
     handleCloseModal()
   }
 
-  const handleDeleteBook = (id) => {
+  const handleDeleteBook = (id: number): void => {
     if (confirm("Are you sure you want to delete this book?")) {
       setBooks((prev) => prev.filter((book) => book.id !== id))
     }
   }
 
-  const handleStockChange = (id, newStock) => {
+  const handleStockChange = (id: number, newStock: number): void => {
     setBooks((prev) => prev.map((book) => (book.id === id ? { ...book, stock: Math.max(0, newStock) } : book)))
   }
 
   return (
-    <>
-      <AdminNavigation userType="admin" />
+    <ProtectedRoute requiredRole="admin">
+      <>
+        <AdminNavigation userType="admin" />
 
       <main className="min-h-screen bg-off-white">
         <section className="py-12 px-4 md:px-8">
@@ -221,6 +287,8 @@ export default function AdminInventory() {
                           onChange={(e) => handleStockChange(book.id, Number.parseInt(e.target.value) || 0)}
                           className="w-16 text-center border border-gray-300 rounded px-2 py-1 font-semibold"
                           min="0"
+                          title="Update stock quantity"
+                          placeholder="0"
                         />
                       </div>
 
@@ -241,14 +309,20 @@ export default function AdminInventory() {
                       {/* Actions */}
                       <div className="flex gap-2">
                         <button
+                          type="button"
                           onClick={() => handleOpenModal(book)}
-                          className="p-2 hover:bg-cream rounded-lg transition-colors"
+                          className="p-2 hover:bg-blue-100 rounded-lg transition-colors"
+                          title="Edit book"
+                          aria-label="Edit book"
                         >
                           <Edit2 size={20} className="text-gold" />
                         </button>
                         <button
+                          type="button"
                           onClick={() => handleDeleteBook(book.id)}
                           className="p-2 hover:bg-red-50 rounded-lg transition-colors"
+                          title="Delete book"
+                          aria-label="Delete book"
                         >
                           <Trash2 size={20} className="text-coral" />
                         </button>
@@ -269,7 +343,13 @@ export default function AdminInventory() {
             <div className="p-6">
               <div className="flex items-center justify-between mb-6">
                 <h2 className="font-serif text-2xl font-bold">{editingBook ? "Edit Book" : "Add New Book"}</h2>
-                <button onClick={handleCloseModal} className="p-1 hover:bg-gray-100 rounded">
+                <button
+                  type="button"
+                  onClick={handleCloseModal}
+                  className="p-1 hover:bg-gray-100 rounded"
+                  title="Close modal"
+                  aria-label="Close modal"
+                >
                   <X size={24} />
                 </button>
               </div>
@@ -393,6 +473,7 @@ export default function AdminInventory() {
       )}
 
       <Footer />
-    </>
+      </>
+    </ProtectedRoute>
   )
 }
