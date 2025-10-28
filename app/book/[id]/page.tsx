@@ -158,11 +158,11 @@ export default function BookDetails({ params }: { params: Promise<BookParams> })
             </Link>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-12">
-              {/* Book Cover with Gallery */}
+              {/* Book Cover - LEFT SIDE */}
               <div>
                 {/* Main Image */}
-                <div className="overflow-hidden cursor-pointer flex flex-col rounded-lg border border-gray-200 mb-4">
-                  <div className="aspect-[3/4] bg-gray-200 flex items-center justify-center flex-shrink-0 rounded-lg overflow-hidden relative">
+                <div className="overflow-hidden cursor-pointer flex flex-col rounded-lg border border-gray-200">
+                  <div className="aspect-[3/4] bg-gray-200 flex items-center justify-center flex-shrink-0 rounded-lg overflow-hidden relative w-full max-w-md">
                     {imageError ? (
                       <div className="flex flex-col items-center justify-center w-full h-full bg-gray-100">
                         <BookOpen size={48} className="text-gray-400 mb-2" />
@@ -173,40 +173,45 @@ export default function BookDetails({ params }: { params: Promise<BookParams> })
                         src={book.image || "/placeholder.svg"}
                         alt={book.title}
                         className="w-full h-full object-cover"
+                        loading="eager"
                         onError={() => setImageError(true)}
                       />
                     )}
                   </div>
                 </div>
+              </div>
 
-                {/* Book Info */}
-                <div>
-                  <div className="flex gap-2 mb-4 items-center flex-wrap">
-                    <div className="badge-gold inline-block">{book.category}</div>
+              {/* Book Info - RIGHT SIDE */}
+              <div>
+                {/* Category Badge and Header */}
+                <div className="flex gap-2 mb-4 items-center flex-wrap">
+                  <div className="badge-gold inline-block">{book.category}</div>
+                </div>
+
+                {/* Title */}
+                <h1 className="font-serif text-4xl font-bold mb-2">{book.title}</h1>
+                
+                {/* Author */}
+                <p className="text-gray-600 text-lg mb-6">{book.author}</p>
+                {/* Price Card */}
+                <Card className="card-base p-6 mb-6 bg-cream">
+                  <div className="flex items-center justify-between mb-4">
+                    <span className="text-gray-600">Price</span>
+                    <span className="text-coral font-bold text-3xl">₱{book.price.toFixed(2)}</span>
                   </div>
-
-                  <h1 className="font-serif text-4xl font-bold mb-2">{book.title}</h1>
-                  <p className="text-gray-600 text-lg mb-6">{book.author}</p>
-
-                  {/* Price Card */}
-                  <Card className="card-base p-6 mb-6 bg-cream">
-                    <div className="flex items-center justify-between mb-4">
-                      <span className="text-gray-600">Price</span>
-                      <span className="text-coral font-bold text-3xl">₱{book.price.toFixed(2)}</span>
-                    </div>
-                    <div className="flex items-center gap-2">
-                      <Package size={20} className="text-gold" />
-                      <span className="text-sm">{book.stock > 0 ? `${book.stock} in stock` : "Out of stock"}</span>
-                    </div>
-                  </Card>
-
-                  {/* Description */}
-                  <div className="mb-8">
-                    <h2 className="font-serif font-bold text-xl mb-3">Description</h2>
-                    <p className="text-gray-700 leading-relaxed select-text">{book.description}</p>
+                  <div className="flex items-center gap-2">
+                    <Package size={20} className="text-gold" />
+                    <span className="text-sm">{book.stock > 0 ? `${book.stock} in stock` : "Out of stock"}</span>
                   </div>
+                </Card>
 
-                  {/* Quantity Selector */}
+                {/* Description */}
+                <div className="mb-8">
+                  <h2 className="font-serif font-bold text-xl mb-3">Description</h2>
+                  <p className="text-gray-700 leading-relaxed select-text">{book.description}</p>
+                </div>
+
+                {/* Quantity Selector */}
                 <div className="mb-8">
                   <label className="block text-sm font-semibold mb-3">Quantity</label>
                   <div className="flex items-center gap-4">
@@ -236,7 +241,7 @@ export default function BookDetails({ params }: { params: Promise<BookParams> })
                 <div className="mb-8 p-4 bg-cream rounded-lg">
                   <div className="flex justify-between items-center">
                     <span className="text-gray-600">Total</span>
-                    <span className="text-coral font-bold text-2xl">${total.toFixed(2)}</span>
+                    <span className="text-coral font-bold text-2xl">₱{total.toFixed(2)}</span>
                   </div>
                 </div>
 
@@ -268,8 +273,17 @@ export default function BookDetails({ params }: { params: Promise<BookParams> })
                     className="btn-secondary w-full rounded-full py-4 text-lg flex items-center justify-center gap-2"
                     disabled={book?.stock === 0 || isAdding}
                   >
-                    <ShoppingCart size={20} />
-                    {isAdding ? "Adding..." : addedToCart ? "Added to Cart!" : "Add to Cart"}
+                    {isAdding ? (
+                      <>
+                        <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                        Adding...
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingCart size={20} />
+                        {addedToCart ? "Added to Cart!" : "Add to Cart"}
+                      </>
+                    )}
                   </Button>
 
                   {addedToCart && (

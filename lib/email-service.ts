@@ -1,7 +1,9 @@
 /**
- * Email Service using SendGrid
+ * Email Service using Resend
  * For development: Uses console.log to simulate emails
- * For production: Uses SendGrid API
+ * For production: Uses Resend API (100 emails/day free)
+ * 
+ * Get your API key at: https://resend.com
  */
 
 interface EmailOptions {
@@ -14,7 +16,9 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
   const { to, subject, html } = options
 
   // Development mode: Log emails instead of sending
-  if (process.env.NODE_ENV === "development" || !process.env.SENDGRID_API_KEY) {
+  // Uncomment the line below to send real emails in dev mode
+  // if (process.env.NODE_ENV === "development" || !process.env.RESEND_API_KEY) {
+  if (!process.env.RESEND_API_KEY) {
     console.log("📧 [EMAIL - DEV MODE]")
     console.log(`To: ${to}`)
     console.log(`Subject: ${subject}`)
@@ -22,36 +26,25 @@ export async function sendEmail(options: EmailOptions): Promise<void> {
     return
   }
 
-  // Production: Send via SendGrid
+  // Production: Send via Resend
   try {
-    const response = await fetch("https://api.sendgrid.com/v3/mail/send", {
+    const response = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        Authorization: `Bearer ${process.env.SENDGRID_API_KEY}`,
+        Authorization: `Bearer ${process.env.RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        personalizations: [
-          {
-            to: [{ email: to }],
-            subject,
-          },
-        ],
-        from: {
-          email: process.env.SENDGRID_FROM_EMAIL || "noreply@sierbosten.com",
-          name: "Sierbosten Literature Collective",
-        },
-        content: [
-          {
-            type: "text/html",
-            value: html,
-          },
-        ],
+        from: process.env.RESEND_FROM_EMAIL || "noreply@sierbosten.com",
+        to,
+        subject,
+        html,
       }),
     })
 
     if (!response.ok) {
-      throw new Error(`SendGrid error: ${response.statusText}`)
+      const error = await response.json()
+      throw new Error(`Resend error: ${error.message}`)
     }
 
     console.log(`✅ Email sent to ${to}`)

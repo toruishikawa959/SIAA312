@@ -64,6 +64,26 @@ export default function StaffOrders() {
         body: JSON.stringify({ status: newStatus }),
       })
       if (!response.ok) throw new Error("Failed to update order")
+      
+      // Send status update email to customer
+      const order = orders.find(o => o._id === orderId)
+      if (order) {
+        try {
+          await fetch(`/api/admin/orders/${orderId}/send-status-email`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ 
+              status: newStatus,
+              email: order.guestEmail,
+              name: order.guestName
+            }),
+          })
+        } catch (emailErr) {
+          console.error("Failed to send status email:", emailErr)
+          // Don't fail the status update if email fails
+        }
+      }
+      
       await fetchOrders()
     } catch (err) {
       setError(err instanceof Error ? err.message : "Failed to update order")
@@ -84,12 +104,13 @@ export default function StaffOrders() {
     return colors[status] || "bg-gray-100 text-gray-800"
   }
 
-  const getNextStatus = (currentStatus: string) => {
+  const getNextStatus = (currentStatus: string, deliveryMethod?: string) => {
     const workflow: Record<string, string> = {
       confirmed: "preparing",
-      preparing: "ready_for_pickup",
-      ready_for_pickup: "delivered",
+      preparing: deliveryMethod === "pickup" ? "ready_for_pickup" : "shipped",
+      ready_for_pickup: "ready_for_pickup", // Final status for pickup orders
       shipped: "delivered",
+      delivered: "delivered", // Final status
     }
     return workflow[currentStatus] || null
   }
@@ -188,11 +209,11 @@ export default function StaffOrders() {
                         </div>
                       )}
 
-                      {getNextStatus(order.status) && (
+                      {getNextStatus(order.status, order.deliveryMethod) && getNextStatus(order.status, order.deliveryMethod) !== order.status && (
                         <Button
                           onClick={(e) => {
                             e.stopPropagation()
-                            updateOrderStatus(order._id, getNextStatus(order.status)!)
+                            updateOrderStatus(order._id, getNextStatus(order.status, order.deliveryMethod)!)
                           }}
                           disabled={updatingOrderId === order._id}
                           className="w-full bg-gold text-white hover:bg-gold/90"
@@ -203,7 +224,7 @@ export default function StaffOrders() {
                               Updating...
                             </>
                           ) : (
-                            `Mark as ${getNextStatus(order.status)?.replace("_", " ").toUpperCase()}`
+                            `Mark as ${getNextStatus(order.status, order.deliveryMethod)?.replace("_", " ").toUpperCase()}`
                           )}
                         </Button>
                       )}

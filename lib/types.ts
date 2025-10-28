@@ -10,6 +10,8 @@ export interface Book {
   stock: number
   image?: string  // Base64 encoded image
   active?: boolean  // Book availability status
+  series?: string  // Series/Volume name (e.g., "Harry Potter", "A Song of Ice and Fire")
+  volumeNumber?: number  // Volume/book number in series (e.g., 1, 2, 3)
   createdAt?: Date
   updatedAt?: Date
 }

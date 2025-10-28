@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
-import { BookOpen, Package, ShoppingCart, BarChart3, Settings, LogOut, Menu, X, Home, Loader } from "lucide-react"
+import { BookOpen, Package, ShoppingCart, BarChart3, Settings, LogOut, Menu, X, Home, Loader, CreditCard } from "lucide-react"
 
 interface UserSession {
   email: string
@@ -41,6 +41,7 @@ export function StaffSidebar() {
     { href: "/staff/dashboard", label: "Dashboard", icon: BarChart3 },
     { href: "/staff/orders", label: "Orders", icon: ShoppingCart },
     { href: "/staff/inventory", label: "Inventory", icon: Package },
+    { href: "/staff/mock-payment", label: "Mock Payment", icon: CreditCard },
   ]
 
   const isActive = (href: string) => pathname === href

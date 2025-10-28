@@ -155,13 +155,26 @@ export async function GET(request: NextRequest) {
     }
 
     if (userId) {
-      // Get user's orders
-      const orders = await ordersCollection
-        .find({ userId: new ObjectId(userId) })
-        .sort({ createdAt: -1 })
-        .toArray()
+      try {
+        // Convert userId string to ObjectId
+        const userObjectId = ObjectId.isValid(userId) ? new ObjectId(userId) : null
+        
+        if (!userObjectId) {
+          console.error("Invalid userId format:", userId)
+          return NextResponse.json([], { status: 200 })
+        }
 
-      return NextResponse.json(orders, { status: 200 })
+        // Get user's orders
+        const orders = await ordersCollection
+          .find({ userId: userObjectId })
+          .sort({ createdAt: -1 })
+          .toArray()
+
+        return NextResponse.json(orders, { status: 200 })
+      } catch (err) {
+        console.error("Error fetching user orders:", err, "userId:", userId)
+        return NextResponse.json([], { status: 200 })
+      }
     }
 
     // Get all orders (admin only)

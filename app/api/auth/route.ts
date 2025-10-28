@@ -50,7 +50,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           user: {
-            _id: result.insertedId,
+            _id: result.insertedId.toString(),
             email: newUser.email,
             firstName: newUser.firstName,
             lastName: newUser.lastName,
@@ -82,7 +82,7 @@ export async function POST(request: NextRequest) {
       return NextResponse.json(
         {
           user: {
-            _id: user._id,
+            _id: user._id.toString(),
             email: user.email,
             firstName: user.firstName,
             lastName: user.lastName,

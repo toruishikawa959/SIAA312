@@ -22,6 +22,7 @@ export default function Cart() {
   const [cartItems, setCartItems] = useState<GuestCartItem[]>([])
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [checkoutLoading, setCheckoutLoading] = useState(false)
 
   useEffect(() => {
     // Check if user is logged in
@@ -53,14 +54,17 @@ export default function Cart() {
   }
 
   const handleCheckout = async () => {
+    setCheckoutLoading(true)
     if (!isLoggedIn) {
       // Redirect to login/signup
-      router.push("/login")
+      await router.push("/login")
+      setCheckoutLoading(false)
       return
     }
 
     // Proceed to checkout
-    router.push("/checkout")
+    await router.push("/checkout")
+    setCheckoutLoading(false)
   }
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
@@ -237,10 +241,20 @@ export default function Cart() {
                     </div>
                     <button
                       onClick={handleCheckout}
-                      className="w-full bg-coral text-white font-semibold py-3 rounded-full hover:bg-red-600 transition flex items-center justify-center gap-2 mb-3"
+                      disabled={checkoutLoading}
+                      className="w-full bg-coral text-white font-semibold py-3 rounded-full hover:bg-red-600 transition flex items-center justify-center gap-2 mb-3 disabled:opacity-70 disabled:cursor-not-allowed"
                     >
-                      {isLoggedIn ? "Proceed to Checkout" : "Sign In to Checkout"}
-                      <ArrowRight size={20} />
+                      {checkoutLoading ? (
+                        <>
+                          <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                          Loading...
+                        </>
+                      ) : (
+                        <>
+                          {isLoggedIn ? "Proceed to Checkout" : "Sign In to Checkout"}
+                          <ArrowRight size={20} />
+                        </>
+                      )}
                     </button>
                     <Link href="/catalog">
                       <Button className="btn-outline w-full rounded-full">Continue Shopping</Button>

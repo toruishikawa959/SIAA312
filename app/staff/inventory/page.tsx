@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Button } from "@/components/ui/button"
 import { ProtectedRoute } from "@/components/protected-route"
-import { Search, AlertCircle, Loader, Plus, Edit2, Trash2, X, Upload } from "lucide-react"
+import { Search, AlertCircle, Loader, Plus, Edit2, X, Upload } from "lucide-react"
 
 interface Book {
   _id: string
@@ -17,7 +17,10 @@ interface Book {
   price: number
   stock?: number
   image?: string
+  description?: string
   active?: boolean
+  series?: string
+  volumeNumber?: number
 }
 
 interface FormData {
@@ -28,6 +31,8 @@ interface FormData {
   stock: string
   image: string
   description: string
+  series: string
+  volumeNumber: string
 }
 
 interface CropState {
@@ -47,6 +52,11 @@ export default function StaffInventory() {
   const [showModal, setShowModal] = useState(false)
   const [editingBook, setEditingBook] = useState<Book | null>(null)
   const [submitting, setSubmitting] = useState(false)
+  const [confirmDialog, setConfirmDialog] = useState<{ show: boolean; message: string; onConfirm: () => void }>({
+    show: false,
+    message: "",
+    onConfirm: () => {},
+  })
   const canvasRef = useRef<HTMLCanvasElement>(null)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const styleRef = useRef<HTMLStyleElement>(null)
@@ -59,6 +69,8 @@ export default function StaffInventory() {
     stock: "",
     image: "",
     description: "",
+    series: "",
+    volumeNumber: "",
   })
 
   const [uploadedImage, setUploadedImage] = useState<string | null>(null)
@@ -155,6 +167,8 @@ export default function StaffInventory() {
       stock: "",
       image: "",
       description: "",
+      series: "",
+      volumeNumber: "",
     })
     setUploadedImage(null)
     setShowCropper(false)
@@ -170,7 +184,9 @@ export default function StaffInventory() {
       price: book.price.toString(),
       stock: (book.stock || 0).toString(),
       image: book.image || "",
-      description: "",
+      description: book.description || "",
+      series: book.series || "",
+      volumeNumber: (book.volumeNumber || "").toString(),
     })
     setUploadedImage(book.image || null)
     setShowCropper(false)
@@ -188,6 +204,8 @@ export default function StaffInventory() {
       stock: "",
       image: "",
       description: "",
+      series: "",
+      volumeNumber: "",
     })
     setUploadedImage(null)
     setShowCropper(false)
@@ -251,7 +269,7 @@ export default function StaffInventory() {
         if (ctx) {
           ctx.drawImage(img, 0, 0, width, height)
         }
-        resolve(canvas.toDataURL("image/jpeg", 0.8))
+        resolve(canvas.toDataURL("image/jpeg", 0.95))
       }
       img.src = imageData
     })
@@ -266,46 +284,40 @@ export default function StaffInventory() {
       const ctx = canvas.getContext("2d")
       if (!ctx) return
 
-      const displayWidth = 300
-      const displayHeight = 420
+      const containerWidth = 800
+      const containerHeight = 1200
 
-      // Calculate scale based on how image is displayed
-      const containerWidth = 300
-      const containerHeight = 420
-      
-      // Image natural dimensions
+      // Scale the image to fit the container while maintaining aspect ratio
       const imgWidth = img.width
       const imgHeight = img.height
-      
-      // Calculate how the image is scaled to fit the container
-      let displayScale = Math.max(containerWidth / imgWidth, containerHeight / imgHeight)
-      const scaledWidth = imgWidth * displayScale * cropState.scale
-      const scaledHeight = imgHeight * displayScale * cropState.scale
-      
-      // Calculate crop area considering the transformations
-      const cropX = -cropState.x / cropState.scale / displayScale
-      const cropY = -cropState.y / cropState.scale / displayScale
-      const cropW = containerWidth / cropState.scale / displayScale
-      const cropH = containerHeight / cropState.scale / displayScale
+      const scale = Math.max(containerWidth / imgWidth, containerHeight / imgHeight)
+      const scaledWidth = imgWidth * scale * cropState.scale
+      const scaledHeight = imgHeight * scale * cropState.scale
 
-      canvas.width = 300
-      canvas.height = 420
+      // Calculate source crop region from the positioned/scaled image
+      const sourceX = -cropState.x / (scale * cropState.scale)
+      const sourceY = -cropState.y / (scale * cropState.scale)
+      const sourceWidth = containerWidth / (scale * cropState.scale)
+      const sourceHeight = containerHeight / (scale * cropState.scale)
 
+      canvas.width = 800
+      canvas.height = 1200
+
+      // Draw the cropped region from the source image
       ctx.drawImage(
         img,
-        Math.max(0, cropX),
-        Math.max(0, cropY),
-        Math.min(cropW, imgWidth - Math.max(0, cropX)),
-        Math.min(cropH, imgHeight - Math.max(0, cropY)),
+        Math.max(0, sourceX),
+        Math.max(0, sourceY),
+        Math.min(sourceWidth, imgWidth - Math.max(0, sourceX)),
+        Math.min(sourceHeight, imgHeight - Math.max(0, sourceY)),
         0,
         0,
-        300,
-        420
+        800,
+        1200
       )
 
-      const croppedImage = canvas.toDataURL("image/jpeg", 0.85)
-      const resized = await resizeImage(croppedImage, 300, 420)
-      setFormData((prev) => ({ ...prev, image: resized }))
+      const croppedImage = canvas.toDataURL("image/png")
+      setFormData((prev) => ({ ...prev, image: croppedImage }))
       setShowCropper(false)
     }
     img.src = uploadedImage
@@ -373,6 +385,8 @@ export default function StaffInventory() {
             stock: parseInt(formData.stock) || 0,
             image: formData.image,
             description: formData.description,
+            series: formData.series || undefined,
+            volumeNumber: formData.volumeNumber ? parseInt(formData.volumeNumber) : undefined,
           }),
         })
 
@@ -390,6 +404,9 @@ export default function StaffInventory() {
                   price: parseFloat(formData.price),
                   stock: parseInt(formData.stock) || 0,
                   image: formData.image,
+                  description: formData.description,
+                  series: formData.series || undefined,
+                  volumeNumber: formData.volumeNumber ? parseInt(formData.volumeNumber) : undefined,
                 }
               : book
           )
@@ -407,6 +424,8 @@ export default function StaffInventory() {
             stock: parseInt(formData.stock) || 0,
             image: formData.image,
             description: formData.description,
+            series: formData.series || undefined,
+            volumeNumber: formData.volumeNumber ? parseInt(formData.volumeNumber) : undefined,
           }),
         })
 
@@ -426,46 +445,65 @@ export default function StaffInventory() {
   }
 
   const handleDeactivate = async (bookId: string) => {
-    if (!confirm("Are you sure you want to deactivate this book?")) return
+    setConfirmDialog({
+      show: true,
+      message: "Are you sure you want to deactivate this book?",
+      onConfirm: async () => {
+        try {
+          const res = await fetch("/api/books", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              _id: bookId,
+              active: false,
+            }),
+          })
 
-    try {
-      const res = await fetch("/api/books", {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          _id: bookId,
-          active: false,
-        }),
-      })
+          if (!res.ok) throw new Error("Failed to deactivate book")
 
-      if (!res.ok) throw new Error("Failed to deactivate book")
-
-      setBooks((prev) =>
-        prev.map((book) =>
-          book._id === bookId ? { ...book, active: false } : book
-        )
-      )
-    } catch (err) {
-      console.error("Failed to deactivate book:", err)
-      alert("Failed to deactivate book")
-    }
+          setBooks((prev) =>
+            prev.map((book) =>
+              book._id === bookId ? { ...book, active: false } : book
+            )
+          )
+          setConfirmDialog({ show: false, message: "", onConfirm: () => {} })
+        } catch (err) {
+          console.error("Failed to deactivate book:", err)
+          alert("Failed to deactivate book")
+        }
+      },
+    })
   }
 
-  const handleDelete = async (bookId: string) => {
-    if (!confirm("Are you sure you want to delete this book?")) return
+  const handleActivate = async (bookId: string) => {
+    setConfirmDialog({
+      show: true,
+      message: "Are you sure you want to activate this book?",
+      onConfirm: async () => {
+        try {
+          const res = await fetch("/api/books", {
+            method: "PUT",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+              _id: bookId,
+              active: true,
+            }),
+          })
 
-    try {
-      const res = await fetch(`/api/books/${bookId}`, {
-        method: "DELETE",
-      })
+          if (!res.ok) throw new Error("Failed to activate book")
 
-      if (!res.ok) throw new Error("Failed to delete book")
-
-      setBooks((prev) => prev.filter((book) => book._id !== bookId))
-    } catch (err) {
-      console.error("Failed to delete book:", err)
-      alert("Failed to delete book")
-    }
+          setBooks((prev) =>
+            prev.map((book) =>
+              book._id === bookId ? { ...book, active: true } : book
+            )
+          )
+          setConfirmDialog({ show: false, message: "", onConfirm: () => {} })
+        } catch (err) {
+          console.error("Failed to activate book:", err)
+          alert("Failed to activate book")
+        }
+      },
+    })
   }
 
 
@@ -577,14 +615,15 @@ export default function StaffInventory() {
                                   <AlertCircle size={16} />
                                   <span className="hidden md:inline">Deactivate</span>
                                 </Button>
-                              ) : null}
-                              <Button
-                                onClick={() => handleDelete(book._id)}
-                                className="bg-red-500 hover:bg-red-600 text-white flex items-center gap-1 text-sm"
-                              >
-                                <Trash2 size={16} />
-                                <span className="hidden md:inline">Delete</span>
-                              </Button>
+                              ) : (
+                                <Button
+                                  onClick={() => handleActivate(book._id)}
+                                  className="bg-green-500 hover:bg-green-600 text-white flex items-center gap-1 text-sm"
+                                >
+                                  <AlertCircle size={16} />
+                                  <span className="hidden md:inline">Activate</span>
+                                </Button>
+                              )}
                             </div>
                           </div>
                         </Card>
@@ -681,6 +720,31 @@ export default function StaffInventory() {
                         onChange={handleInputChange}
                         placeholder="0"
                         min="0"
+                        className="w-full border-2 border-gray-300 rounded px-3 py-2"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold mb-2">Series/Volume Name</label>
+                      <Input
+                        type="text"
+                        name="series"
+                        value={formData.series}
+                        onChange={handleInputChange}
+                        placeholder="e.g. Harry Potter, Game of Thrones"
+                        className="w-full border-2 border-gray-300 rounded px-3 py-2"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="block text-sm font-semibold mb-2">Volume/Book Number</label>
+                      <Input
+                        type="number"
+                        name="volumeNumber"
+                        value={formData.volumeNumber}
+                        onChange={handleInputChange}
+                        placeholder="e.g. 1, 2, 3"
+                        min="1"
                         className="w-full border-2 border-gray-300 rounded px-3 py-2"
                       />
                     </div>
@@ -823,6 +887,31 @@ export default function StaffInventory() {
                 </form>
 
                 <canvas ref={canvasRef} className="hidden" />
+              </div>
+            </Card>
+          </div>
+        )}
+
+        {/* Confirmation Dialog */}
+        {confirmDialog.show && (
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center z-[60] p-4">
+            <Card className="card-base w-full max-w-sm">
+              <div className="p-6">
+                <p className="text-gray-700 font-semibold mb-6 text-center">{confirmDialog.message}</p>
+                <div className="flex gap-3 justify-center">
+                  <Button
+                    onClick={() => setConfirmDialog({ show: false, message: "", onConfirm: () => {} })}
+                    className="bg-gray-300 hover:bg-gray-400 text-charcoal font-semibold px-6"
+                  >
+                    Cancel
+                  </Button>
+                  <Button
+                    onClick={confirmDialog.onConfirm}
+                    className="bg-coral hover:bg-red-600 text-white font-semibold px-6"
+                  >
+                    Confirm
+                  </Button>
+                </div>
               </div>
             </Card>
           </div>

@@ -36,6 +36,7 @@ export default function GuestCheckout() {
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
+  const [userId, setUserId] = useState<string | null>(null)
 
   const [formData, setFormData] = useState<GuestCheckoutData>({
     email: "",
@@ -48,6 +49,18 @@ export default function GuestCheckout() {
   })
 
   useEffect(() => {
+    // Check if user is logged in
+    const userStr = localStorage.getItem("user")
+    if (userStr) {
+      const user = JSON.parse(userStr)
+      setUserId(user._id)
+      setFormData(prev => ({
+        ...prev,
+        email: user.email || "",
+        fullName: `${user.firstName || ""} ${user.lastName || ""}`.trim(),
+      }))
+    }
+
     const items = getGuestCart()
     if (items.length === 0) {
       router.push("/cart")
@@ -104,26 +117,39 @@ export default function GuestCheckout() {
     setSubmitting(true)
 
     try {
-      // Create guest order
+      // Create order (user or guest)
+      const orderPayload: any = {
+        items: cartItems.map(item => ({
+          bookId: item.bookId,
+          quantity: item.quantity,
+          price: item.price,
+        })),
+        deliveryMethod: formData.deliveryMethod,
+        total: subtotal + tax + deliveryFee,
+      }
+
+      // If user is logged in, pass userId and shipping address
+      if (userId) {
+        orderPayload.userId = userId
+        orderPayload.shippingAddress =
+          formData.deliveryMethod === "pickup"
+            ? "Store Pickup"
+            : `${formData.address}, ${formData.city} ${formData.postalCode}`
+      } else {
+        // Otherwise use guest details
+        orderPayload.guestEmail = formData.email
+        orderPayload.guestName = formData.fullName
+        orderPayload.guestPhone = formData.phone
+        orderPayload.guestAddress =
+          formData.deliveryMethod === "pickup"
+            ? "Store Pickup"
+            : `${formData.address}, ${formData.city} ${formData.postalCode}`
+      }
+
       const orderResponse = await fetch("/api/orders", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          guestEmail: formData.email,
-          guestName: formData.fullName,
-          guestPhone: formData.phone,
-          guestAddress:
-            formData.deliveryMethod === "pickup"
-              ? "Store Pickup"
-              : `${formData.address}, ${formData.city} ${formData.postalCode}`,
-          items: cartItems.map(item => ({
-            bookId: item.bookId,
-            quantity: item.quantity,
-            price: item.price,
-          })),
-          deliveryMethod: formData.deliveryMethod,
-          total: subtotal + tax + deliveryFee,
-        }),
+        body: JSON.stringify(orderPayload),
       })
 
       if (!orderResponse.ok) {
@@ -410,8 +436,11 @@ export default function GuestCheckout() {
                 <Button
                   type="submit"
                   disabled={submitting}
-                  className="btn-secondary w-full py-4 text-lg rounded-full"
+                  className="btn-secondary w-full py-4 text-lg rounded-full flex items-center justify-center gap-2"
                 >
+                  {submitting && (
+                    <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                  )}
                   {submitting ? "Creating Order..." : "Proceed to Payment"}
                 </Button>
               </form>

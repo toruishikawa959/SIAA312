@@ -133,6 +133,7 @@ export default function Catalog() {
                             src={book.image || "/placeholder.svg"}
                             alt={book.title}
                             className="w-full h-full object-cover"
+                            loading="lazy"
                             onError={() => {
                               setImageErrors(prev => new Set([...prev, book._id]))
                             }}
