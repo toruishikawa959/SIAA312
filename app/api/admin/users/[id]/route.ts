@@ -3,8 +3,8 @@ import { ObjectId } from "mongodb"
 import { connectToDatabase } from "@/lib/db"
 
 /**
- * PATCH /api/admin/orders/[id]
- * Update order status
+ * PATCH /api/admin/users/[id]
+ * Update user role
  */
 export async function PATCH(
   request: NextRequest,
@@ -12,46 +12,45 @@ export async function PATCH(
 ) {
   try {
     const { id } = await params
-    const { status, notes } = await request.json()
+    const { role } = await request.json()
 
-    // Validate status
-    const validStatuses = ["pending", "processing", "confirmed", "preparing", "ready_for_pickup", "shipped", "delivered", "completed"]
-    if (!validStatuses.includes(status)) {
+    // Validate role
+    const validRoles = ["customer", "staff", "admin"]
+    if (!validRoles.includes(role)) {
       return NextResponse.json(
-        { error: "Invalid status" },
+        { error: "Invalid role" },
         { status: 400 }
       )
     }
 
     const { db } = await connectToDatabase()
-    const ordersCollection = db.collection("orders")
+    const usersCollection = db.collection("users")
 
-    const result = await ordersCollection.updateOne(
+    const result = await usersCollection.updateOne(
       { _id: new ObjectId(id) },
       {
         $set: {
-          status,
+          role,
           updatedAt: new Date(),
-          ...(notes && { notes }),
         },
       }
     )
 
     if (result.matchedCount === 0) {
       return NextResponse.json(
-        { error: "Order not found" },
+        { error: "User not found" },
         { status: 404 }
       )
     }
 
     return NextResponse.json({
       success: true,
-      message: "Order updated",
+      message: "User updated",
     })
   } catch (err) {
-    console.error("[Admin] Update order error:", err)
+    console.error("[Admin] Update user error:", err)
     return NextResponse.json(
-      { error: "Failed to update order" },
+      { error: "Failed to update user" },
       { status: 500 }
     )
   }

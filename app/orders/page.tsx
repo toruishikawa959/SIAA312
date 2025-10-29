@@ -160,14 +160,18 @@ export default function MyOrders() {
   )
 
   const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
+    const statusLower = status.toLowerCase()
+    switch (statusLower) {
       case "pending":
+      case "confirmed":
         return "bg-yellow-100 text-yellow-800"
       case "processing":
+      case "preparing":
         return "bg-blue-100 text-blue-800"
       case "shipped":
         return "bg-indigo-100 text-indigo-800"
       case "delivered":
+      case "ready_for_pickup":
         return "bg-green-100 text-green-800"
       case "completed":
         return "bg-green-100 text-green-800"
@@ -196,16 +200,34 @@ export default function MyOrders() {
     }
   }
 
-  const getTrackingTimeline = (status: string) => {
-    const timeline = [
-      { step: "pending", label: "Placed" },
-      { step: "processing", label: "Processing" },
-      { step: "shipped", label: "Shipped" },
-      { step: "delivered", label: "Delivered" },
-      { step: "completed", label: "Completed" },
-    ]
+  const getTrackingTimeline = (status: string, deliveryMethod?: string) => {
+    // Map old status names to new ones for timeline
+    const statusMap: Record<string, string> = {
+      "confirmed": "pending",
+      "preparing": "processing",
+      "ready_for_pickup": "ready_for_pickup",
+    }
+    const normalizedStatus = statusMap[status.toLowerCase()] || status.toLowerCase()
 
-    const currentIndex = timeline.findIndex((t) => t.step === status.toLowerCase())
+    let timeline: Array<{ step: string; label: string }> = []
+
+    if (deliveryMethod === "pickup") {
+      timeline = [
+        { step: "pending", label: "Placed" },
+        { step: "processing", label: "Processing" },
+        { step: "ready_for_pickup", label: "Ready for Pickup" },
+      ]
+    } else {
+      timeline = [
+        { step: "pending", label: "Placed" },
+        { step: "processing", label: "Processing" },
+        { step: "shipped", label: "Shipped" },
+        { step: "delivered", label: "Delivered" },
+        { step: "completed", label: "Completed" },
+      ]
+    }
+
+    const currentIndex = timeline.findIndex((t) => t.step === normalizedStatus)
 
     return timeline.map((item, idx) => ({
       ...item,
@@ -460,7 +482,7 @@ export default function MyOrders() {
                         <div className="mb-4 pb-4 border-b border-gray-200">
                           <p className="text-sm font-semibold text-gray-700 mb-3">Order Progress</p>
                           <div className="flex justify-between items-center">
-                            {getTrackingTimeline(order.status).map((step, idx) => (
+                            {getTrackingTimeline(order.status, order.deliveryMethod).map((step, idx) => (
                               <div key={step.step} className="flex flex-col items-center flex-1">
                                 <div
                                   className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 transition-colors ${

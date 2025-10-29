@@ -7,7 +7,7 @@ import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { ProtectedRoute } from "@/components/protected-route"
-import { AlertCircle, Loader } from "lucide-react"
+import { AlertCircle, Loader, Truck, Store } from "lucide-react"
 import { formatPeso } from "@/lib/currency"
 
 interface OrderItem {
@@ -94,25 +94,62 @@ export default function StaffOrders() {
 
   const getStatusColor = (status: string) => {
     const colors: Record<string, string> = {
+      // New statuses
+      pending: "bg-yellow-100 text-yellow-800",
+      processing: "bg-blue-100 text-blue-800",
+      ready_for_pickup: "bg-green-100 text-green-800",
+      shipped: "bg-indigo-100 text-indigo-800",
+      delivered: "bg-green-100 text-green-800",
+      completed: "bg-gray-100 text-gray-800",
+      // Old statuses
       confirmed: "bg-blue-100 text-blue-800",
       preparing: "bg-purple-100 text-purple-800",
-      ready_for_pickup: "bg-green-100 text-green-800",
-      shipped: "bg-green-100 text-green-800",
-      delivered: "bg-gray-100 text-gray-800",
-      pending: "bg-yellow-100 text-yellow-800",
     }
     return colors[status] || "bg-gray-100 text-gray-800"
   }
 
   const getNextStatus = (currentStatus: string, deliveryMethod?: string) => {
     const workflow: Record<string, string> = {
+      // New statuses
+      pending: "processing",
+      processing: deliveryMethod === "pickup" ? "ready_for_pickup" : "shipped",
+      ready_for_pickup: "ready_for_pickup",
+      shipped: "delivered",
+      delivered: "completed",
+      completed: "completed",
+      // Old statuses (for backwards compatibility with existing orders)
       confirmed: "preparing",
       preparing: deliveryMethod === "pickup" ? "ready_for_pickup" : "shipped",
-      ready_for_pickup: "ready_for_pickup", // Final status for pickup orders
-      shipped: "delivered",
-      delivered: "delivered", // Final status
     }
     return workflow[currentStatus] || null
+  }
+
+  const getTrackingTimeline = (status: string, deliveryMethod?: string) => {
+    let timeline: Array<{ step: string; label: string }> = []
+
+    if (deliveryMethod === "pickup") {
+      timeline = [
+        { step: "pending", label: "Placed" },
+        { step: "processing", label: "Processing" },
+        { step: "ready_for_pickup", label: "Ready for Pickup" },
+      ]
+    } else {
+      timeline = [
+        { step: "pending", label: "Placed" },
+        { step: "processing", label: "Processing" },
+        { step: "shipped", label: "Shipped" },
+        { step: "delivered", label: "Delivered" },
+        { step: "completed", label: "Completed" },
+      ]
+    }
+
+    const currentIndex = timeline.findIndex((t) => t.step === status.toLowerCase())
+
+    return timeline.map((item, idx) => ({
+      ...item,
+      completed: currentIndex >= idx,
+      current: idx === currentIndex,
+    }))
   }
 
   if (loading) {
@@ -180,35 +217,70 @@ export default function StaffOrders() {
 
                   {expandedOrder === order._id && (
                     <div className="mt-6 pt-6 border-t border-gray-200">
-                      <h4 className="font-semibold mb-3">Order Items</h4>
-                      <table className="w-full text-sm mb-6">
-                        <thead>
-                          <tr className="border-b">
-                            <th className="text-left pb-2">Book Title</th>
-                            <th className="text-center pb-2">Qty</th>
-                            <th className="text-right pb-2">Price</th>
-                          </tr>
-                        </thead>
-                        <tbody>
-                          {order.items.map((item, idx) => (
-                            <tr key={idx} className="border-b last:border-0">
-                              <td className="py-2">{item.title}</td>
-                              <td className="text-center">{item.quantity}</td>
-                              <td className="text-right">{formatPeso(item.price * item.quantity)}</td>
+                      {/* Order Items */}
+                      <div className="mb-6">
+                        <h4 className="font-semibold mb-3">Order Items</h4>
+                        <table className="w-full text-sm">
+                          <thead>
+                            <tr className="border-b">
+                              <th className="text-left pb-2">Book Title</th>
+                              <th className="text-center pb-2">Qty</th>
+                              <th className="text-right pb-2">Price</th>
                             </tr>
-                          ))}
-                        </tbody>
-                      </table>
+                          </thead>
+                          <tbody>
+                            {order.items.map((item, idx) => (
+                              <tr key={idx} className="border-b last:border-0">
+                                <td className="py-2">{item.title}</td>
+                                <td className="text-center">{item.quantity}</td>
+                                <td className="text-right">{formatPeso(item.price * item.quantity)}</td>
+                              </tr>
+                            ))}
+                          </tbody>
+                        </table>
+                      </div>
 
+                      {/* Tracking Timeline */}
+                      <div className="mb-6 pb-6 border-b border-gray-200">
+                        <p className="text-sm font-semibold text-gray-700 mb-4">Order Progress</p>
+                        <div className="flex justify-between items-center">
+                          {getTrackingTimeline(order.status, order.deliveryMethod).map((step, idx) => (
+                            <div key={step.step} className="flex flex-col items-center flex-1">
+                              <div
+                                className={`w-8 h-8 rounded-full flex items-center justify-center mb-2 transition-colors ${
+                                  step.completed
+                                    ? "bg-green-500 text-white"
+                                    : step.current
+                                      ? "bg-gold text-white ring-2 ring-gold ring-offset-2"
+                                      : "bg-gray-200 text-gray-500"
+                                }`}
+                              >
+                                <span className="text-xs font-bold">{idx + 1}</span>
+                              </div>
+                              <p className="text-xs text-gray-600 text-center">{step.label}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Delivery Address */}
                       {order.guestAddress && (
-                        <div className="mb-4 p-3 bg-gray-50 rounded">
-                          <p className="text-xs text-gray-600 mb-1">
-                            {order.deliveryMethod === "pickup" ? "Pickup Location" : "Delivery Address"}
-                          </p>
+                        <div className="mb-6 p-3 bg-gray-50 rounded">
+                          <div className="flex items-center gap-2 mb-2">
+                            {order.deliveryMethod === "pickup" ? (
+                              <Store size={16} className="text-gold" />
+                            ) : (
+                              <Truck size={16} className="text-gold" />
+                            )}
+                            <p className="text-xs text-gray-600 font-semibold">
+                              {order.deliveryMethod === "pickup" ? "Pickup Location" : "Delivery Address"}
+                            </p>
+                          </div>
                           <p className="text-sm">{order.guestAddress}</p>
                         </div>
                       )}
 
+                      {/* Update Status Button */}
                       {getNextStatus(order.status, order.deliveryMethod) && getNextStatus(order.status, order.deliveryMethod) !== order.status && (
                         <Button
                           onClick={(e) => {

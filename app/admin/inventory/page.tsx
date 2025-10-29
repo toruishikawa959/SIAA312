@@ -1,17 +1,17 @@
 "use client"
 
-import { useState } from "react"
-import { AdminNavigation } from "@/components/admin-navigation"
+import { useState, useEffect } from "react"
+import { AdminSidebar } from "@/components/admin-sidebar"
 import { Footer } from "@/components/footer"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { ProtectedRoute } from "@/components/protected-route"
-import { Search, Plus, Edit2, Trash2, AlertCircle, X } from "lucide-react"
+import { Search, Plus, Edit2, Trash2, AlertCircle, X, Loader } from "lucide-react"
 
 interface BookItem {
-  id: number
+  id: string | number
   title: string
   author: string
   category: string
@@ -34,7 +34,7 @@ interface FormDataType {
   publisher: string
   description: string
   featured: boolean
-  id?: number
+  id?: string | number
   cover?: string
 }
 
@@ -43,60 +43,9 @@ export default function AdminInventory() {
   const [selectedCategory, setSelectedCategory] = useState("all")
   const [showModal, setShowModal] = useState(false)
   const [editingBook, setEditingBook] = useState<BookItem | null>(null)
-  const [books, setBooks] = useState<BookItem[]>([
-    {
-      id: 1,
-      title: "The Art of Listening",
-      author: "Sarah Chen",
-      category: "Essay Collection",
-      price: 18.99,
-      stock: 12,
-      cover: "/placeholder.svg",
-      isbn: "978-1234567890",
-      publisher: "Sierbosten Press",
-      description: "A thoughtful exploration of listening in modern society.",
-      featured: true,
-    },
-    {
-      id: 2,
-      title: "Voices Unheard",
-      author: "Marcus Williams",
-      category: "Poetry",
-      price: 14.99,
-      stock: 2,
-      cover: "/placeholder.svg",
-      isbn: "978-0987654321",
-      publisher: "Independent",
-      description: "Poetry collection exploring marginalized voices.",
-      featured: false,
-    },
-    {
-      id: 3,
-      title: "Community & Change",
-      author: "Dr. Elena Rodriguez",
-      category: "Non-Fiction",
-      price: 22.99,
-      stock: 15,
-      cover: "/placeholder.svg",
-      isbn: "978-1122334455",
-      publisher: "Sierbosten Press",
-      description: "How communities drive social change.",
-      featured: true,
-    },
-    {
-      id: 4,
-      title: "Zine Culture Today",
-      author: "Alex Thompson",
-      category: "Zine",
-      price: 12.99,
-      stock: 0,
-      cover: "/placeholder.svg",
-      isbn: "978-5566778899",
-      publisher: "DIY Press",
-      description: "Contemporary zine culture and DIY publishing.",
-      featured: false,
-    },
-  ])
+  const [books, setBooks] = useState<BookItem[]>([])
+  const [loading, setLoading] = useState(true)
+  const [saveLoading, setSaveLoading] = useState(false)
 
   const [formData, setFormData] = useState<FormDataType>({
     title: "",
@@ -111,6 +60,40 @@ export default function AdminInventory() {
   })
 
   const categories = ["Fiction", "Non-Fiction", "Poetry", "Zine", "Journal", "Anthology", "Essay Collection"]
+
+  // Fetch books from API
+  useEffect(() => {
+    const fetchBooks = async () => {
+      try {
+        setLoading(true)
+        const response = await fetch("/api/books")
+        if (response.ok) {
+          const data = await response.json()
+          // Transform API data to match BookItem interface
+          const transformedBooks = (Array.isArray(data) ? data : []).map((book: any, idx: number) => ({
+            id: book._id?.toString() || idx.toString(),
+            title: book.title || "",
+            author: book.author || "",
+            category: book.category || "Fiction",
+            price: book.price || 0,
+            stock: book.stock || 0,
+            cover: book.cover || "/placeholder.svg",
+            isbn: book.isbn || "",
+            publisher: book.publisher || "",
+            description: book.description || "",
+            featured: book.featured || false,
+          }))
+          setBooks(transformedBooks)
+        }
+      } catch (error) {
+        console.error("Error fetching books:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchBooks()
+  }, [])
 
   const filteredBooks = books.filter((book) => {
     const matchesSearch =
@@ -158,66 +141,123 @@ export default function AdminInventory() {
     setEditingBook(null)
   }
 
-  const handleSaveBook = (): void => {
-    if (editingBook) {
-      setBooks((prev) =>
-        prev.map((book) =>
-          book.id === editingBook.id
-            ? {
-                ...book,
-                title: formData.title,
-                author: formData.author,
-                category: formData.category,
-                price: parseFloat(formData.price),
-                stock: parseInt(formData.stock),
-                isbn: formData.isbn,
-                publisher: formData.publisher,
-                description: formData.description,
-                featured: formData.featured,
-              }
-            : book
-        )
-      )
-    } else {
-      setBooks((prev) => [
-        ...prev,
-        {
-          id: Math.max(...prev.map((b) => b.id), 0) + 1,
-          title: formData.title,
-          author: formData.author,
-          category: formData.category,
-          price: parseFloat(formData.price),
-          stock: parseInt(formData.stock),
-          isbn: formData.isbn,
-          publisher: formData.publisher,
-          description: formData.description,
-          featured: formData.featured,
-          cover: "/placeholder.svg",
-        },
-      ])
+  const handleSaveBook = async (): Promise<void> => {
+    setSaveLoading(true)
+    try {
+      const bookData = {
+        title: formData.title,
+        author: formData.author,
+        category: formData.category,
+        price: parseFloat(formData.price),
+        stock: parseInt(formData.stock),
+        isbn: formData.isbn,
+        publisher: formData.publisher,
+        description: formData.description,
+        featured: formData.featured,
+      }
+
+      if (editingBook) {
+        // Update existing book
+        const response = await fetch(`/api/books`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id: editingBook.id, ...bookData }),
+        })
+
+        if (response.ok) {
+          setBooks((prev) =>
+            prev.map((book) =>
+              book.id === editingBook.id
+                ? {
+                    ...book,
+                    ...bookData,
+                  }
+                : book
+            )
+          )
+        }
+      } else {
+        // Create new book
+        const response = await fetch("/api/books", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(bookData),
+        })
+
+        if (response.ok) {
+          const newBook = await response.json()
+          setBooks((prev) => [
+            ...prev,
+            {
+              id: newBook._id?.toString() || Date.now().toString(),
+              ...bookData,
+              cover: formData.cover || "/placeholder.svg",
+            },
+          ])
+        }
+      }
+      handleCloseModal()
+    } catch (error) {
+      console.error("Error saving book:", error)
+    } finally {
+      setSaveLoading(false)
     }
-    handleCloseModal()
   }
 
-  const handleDeleteBook = (id: number): void => {
+  const handleDeleteBook = async (id: string | number): Promise<void> => {
     if (confirm("Are you sure you want to delete this book?")) {
-      setBooks((prev) => prev.filter((book) => book.id !== id))
+      try {
+        const response = await fetch("/api/books", {
+          method: "DELETE",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ id }),
+        })
+
+        if (response.ok) {
+          setBooks((prev) => prev.filter((book) => book.id !== id))
+        }
+      } catch (error) {
+        console.error("Error deleting book:", error)
+      }
     }
   }
 
-  const handleStockChange = (id: number, newStock: number): void => {
-    setBooks((prev) => prev.map((book) => (book.id === id ? { ...book, stock: Math.max(0, newStock) } : book)))
+  const handleStockChange = async (id: string | number, newStock: number): Promise<void> => {
+    const newStockValue = Math.max(0, newStock)
+    try {
+      const response = await fetch("/api/books", {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ id, stock: newStockValue }),
+      })
+
+      if (response.ok) {
+        setBooks((prev) => prev.map((book) => (book.id === id ? { ...book, stock: newStockValue } : book)))
+      }
+    } catch (error) {
+      console.error("Error updating stock:", error)
+    }
   }
 
   return (
     <ProtectedRoute requiredRole="admin">
       <>
-        <AdminNavigation userType="admin" />
+        <AdminSidebar />
 
-      <main className="min-h-screen bg-off-white">
-        <section className="py-12 px-4 md:px-8">
-          <div className="max-w-7xl mx-auto">
-            <div className="flex items-center justify-between mb-8">
+        {loading && (
+          <main className="min-h-screen bg-off-white md:ml-64 flex items-center justify-center">
+            <div className="flex flex-col items-center gap-4">
+              <Loader size={48} className="text-gold animate-spin" />
+              <p className="text-gray-600">Loading inventory...</p>
+            </div>
+          </main>
+        )}
+
+        {!loading && (
+          <main className="min-h-screen bg-off-white md:ml-64">
+            <section className="py-12 px-4 md:px-8">
+              <div className="max-w-7xl mx-auto">
+                <div className="flex items-center justify-between mb-8">
               <div>
                 <h1 className="font-serif text-4xl font-bold mb-2">Inventory Management</h1>
                 <p className="text-gray-600">View and update stock levels</p>
@@ -283,7 +323,7 @@ export default function AdminInventory() {
                         <label className="text-xs text-gray-600 mb-2">Stock</label>
                         <input
                           type="number"
-                          value={book.stock}
+                          value={typeof book.stock === "number" ? book.stock : 0}
                           onChange={(e) => handleStockChange(book.id, Number.parseInt(e.target.value) || 0)}
                           className="w-16 text-center border border-gray-300 rounded px-2 py-1 font-semibold"
                           min="0"
@@ -335,6 +375,7 @@ export default function AdminInventory() {
           </div>
         </section>
       </main>
+        )}
 
       {/* Add/Edit Modal */}
       {showModal && (

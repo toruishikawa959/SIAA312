@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { AdminNavigation } from "@/components/admin-navigation"
+import { AdminSidebar } from "@/components/admin-sidebar"
 import { Footer } from "@/components/footer"
 import { Card } from "@/components/ui/card"
 import { ProtectedRoute } from "@/components/protected-route"
@@ -9,73 +9,174 @@ import { DollarSign, Package, BookOpen, Users, AlertCircle, Loader } from "lucid
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from "recharts"
 import { formatPeso, formatPesoShort } from "@/lib/currency"
 
+interface RecentOrder {
+  id: string
+  customer: string
+  amount: number
+  status: string
+}
+
+interface LowStockBook {
+  title: string
+  stock: number
+}
+
+interface TopBook {
+  title: string
+  sales: number
+  revenue: number
+}
+
 export default function AdminDashboard() {
   const [loading, setLoading] = useState(true)
-  const stats = [
-    { label: "Total Revenue", value: formatPesoShort(76600), icon: DollarSign, color: "text-coral" },
-    { label: "Total Orders", value: "200", icon: Package, color: "text-gold" },
-    { label: "Books Sold", value: "180", icon: BookOpen, color: "text-gold" },
-    { label: "Active Customers", value: "156", icon: Users, color: "text-coral" },
-  ]
-
-  const revenueData = [
-    { month: "Dec", revenue: 3591.7 },
-    { month: "Jan", revenue: 1840 },
-    { month: "Feb", revenue: 1100 },
-    { month: "Mar", revenue: 8360 },
-    { month: "Apr", revenue: 24560 },
-    { month: "May", revenue: 11501 },
-  ]
-
-  const topBooks = [
-    { title: "The First Bakla", sales: 22, revenue: 9900 },
-    { title: "Ambergris Book Launch", sales: 22, revenue: 9900 },
-    { title: "PUP Book Launch", sales: 20, revenue: 10000 },
-    { title: "MIBF", sales: 43, revenue: 19350 },
-  ]
-
-  const recentOrders = [
-    { id: "ORD-001", customer: "Sarah Johnson", amount: 9900, status: "Completed" },
-    { id: "ORD-002", customer: "John Smith", amount: 13500, status: "Shipped" },
-    { id: "ORD-003", customer: "Emma Davis", amount: 9900, status: "Processing" },
-    { id: "ORD-004", customer: "Michael Brown", amount: 19800, status: "Ready for Pickup" },
-  ]
-
-  const lowStockBooks = [
-    { title: "The First Bakla", stock: 0 },
-    { title: "Heat Index", stock: 0 },
-    { title: "Altar ng Pangungulila", stock: 0 },
-  ]
+  const [stats, setStats] = useState([
+    { label: "Total Revenue", value: "₱0", icon: DollarSign, color: "text-coral" },
+    { label: "Total Orders", value: "0", icon: Package, color: "text-gold" },
+    { label: "Books Sold", value: "0", icon: BookOpen, color: "text-gold" },
+    { label: "Active Customers", value: "0", icon: Users, color: "text-coral" },
+  ])
+  const [recentOrders, setRecentOrders] = useState<RecentOrder[]>([])
+  const [lowStockBooks, setLowStockBooks] = useState<LowStockBook[]>([])
+  const [revenueData, setRevenueData] = useState([
+    { month: "Dec", revenue: 0 },
+    { month: "Jan", revenue: 0 },
+    { month: "Feb", revenue: 0 },
+    { month: "Mar", revenue: 0 },
+    { month: "Apr", revenue: 0 },
+    { month: "May", revenue: 0 },
+  ])
+  const [topBooks, setTopBooks] = useState<TopBook[]>([
+    { title: "Loading...", sales: 0, revenue: 0 },
+  ])
 
   const getStatusColor = (status: string) => {
-    switch (status) {
-      case "Completed":
-        return "bg-green-100 text-green-800"
-      case "Shipped":
-        return "bg-indigo-100 text-indigo-800"
-      case "Processing":
+    switch (status.toLowerCase()) {
+      case "pending":
+      case "confirmed":
+        return "bg-yellow-100 text-yellow-800"
+      case "processing":
+      case "preparing":
         return "bg-blue-100 text-blue-800"
-      case "Ready for Pickup":
+      case "ready_for_pickup":
         return "bg-purple-100 text-purple-800"
+      case "shipped":
+        return "bg-cyan-100 text-cyan-800"
+      case "delivered":
+        return "bg-green-100 text-green-800"
+      case "completed":
+      case "completed":
+        return "bg-emerald-100 text-emerald-800"
       default:
         return "bg-gray-100 text-gray-800"
     }
   }
 
   useEffect(() => {
-    // Simulate loading dashboard data
-    const timer = setTimeout(() => {
-      setLoading(false)
-    }, 800)
+    const fetchDashboardData = async () => {
+      try {
+        setLoading(true)
 
-    return () => clearTimeout(timer)
+        // Fetch orders
+        const ordersResponse = await fetch("/api/orders")
+        const ordersData = ordersResponse.ok ? await ordersResponse.json() : []
+
+        // Fetch books
+        const booksResponse = await fetch("/api/books")
+        const booksData = booksResponse.ok ? await booksResponse.json() : []
+
+        // Calculate stats
+        const totalOrders = Array.isArray(ordersData) ? ordersData.length : 0
+        const totalRevenue = Array.isArray(ordersData)
+          ? ordersData.reduce((sum: number, order: any) => sum + (order.totalAmount || 0), 0)
+          : 0
+
+        const totalBooksSold = Array.isArray(ordersData)
+          ? ordersData.reduce((sum: number, order: any) => {
+              return sum + (Array.isArray(order.items) ? order.items.length : 0)
+            }, 0)
+          : 0
+
+        // Get unique customers
+        const uniqueCustomers = new Set()
+        if (Array.isArray(ordersData)) {
+          ordersData.forEach((order: any) => {
+            if (order.userId) uniqueCustomers.add(order.userId)
+            if (order.guestEmail) uniqueCustomers.add(order.guestEmail)
+          })
+        }
+
+        // Update stats
+        setStats([
+          { label: "Total Revenue", value: formatPesoShort(totalRevenue), icon: DollarSign, color: "text-coral" },
+          { label: "Total Orders", value: totalOrders.toString(), icon: Package, color: "text-gold" },
+          { label: "Books Sold", value: totalBooksSold.toString(), icon: BookOpen, color: "text-gold" },
+          { label: "Active Customers", value: uniqueCustomers.size.toString(), icon: Users, color: "text-coral" },
+        ])
+
+        // Get recent orders (last 4)
+        if (Array.isArray(ordersData)) {
+          const recent = ordersData
+            .slice(-4)
+            .reverse()
+            .map((order: any) => ({
+              id: order._id?.toString().slice(-6).toUpperCase() || "ORD-?",
+              customer: order.guestName || order.userId || "Guest",
+              amount: order.totalAmount || 0,
+              status: order.status || "pending",
+            }))
+          setRecentOrders(recent)
+        }
+
+        // Get low stock books (stock <= 5)
+        if (Array.isArray(booksData)) {
+          const lowStock = booksData
+            .filter((book: any) => (book.stock || 0) <= 5)
+            .slice(0, 3)
+            .map((book: any) => ({
+              title: book.title || "Unknown",
+              stock: book.stock || 0,
+            }))
+          setLowStockBooks(lowStock)
+        }
+
+        // Calculate top books
+        const bookSales: { [key: string]: { sales: number; revenue: number; title: string } } = {}
+        if (Array.isArray(ordersData)) {
+          ordersData.forEach((order: any) => {
+            if (Array.isArray(order.items)) {
+              order.items.forEach((item: any) => {
+                if (!bookSales[item.bookId]) {
+                  bookSales[item.bookId] = { sales: 0, revenue: 0, title: item.title }
+                }
+                bookSales[item.bookId].sales += item.quantity || 1
+                bookSales[item.bookId].revenue += (item.price || 0) * (item.quantity || 1)
+              })
+            }
+          })
+        }
+
+        const topBooksArray = Object.values(bookSales)
+          .sort((a, b) => b.revenue - a.revenue)
+          .slice(0, 4)
+
+        if (topBooksArray.length > 0) {
+          setTopBooks(topBooksArray)
+        }
+      } catch (error) {
+        console.error("Error fetching dashboard data:", error)
+      } finally {
+        setLoading(false)
+      }
+    }
+
+    fetchDashboardData()
   }, [])
 
   if (loading) {
     return (
       <>
-        <AdminNavigation userType="admin" />
-        <main className="min-h-screen bg-off-white flex items-center justify-center">
+        <AdminSidebar />
+        <main className="min-h-screen bg-off-white md:ml-64 flex items-center justify-center">
           <div className="flex flex-col items-center gap-4">
             <Loader size={48} className="text-gold animate-spin" />
             <p className="text-gray-600">Loading dashboard...</p>
@@ -88,11 +189,11 @@ export default function AdminDashboard() {
   return (
     <ProtectedRoute requiredRole="admin">
       <>
-        <AdminNavigation userType="admin" />
+        <AdminSidebar />
 
-        <main className="min-h-screen bg-off-white">
-        <section className="py-12 px-4 md:px-8">
-          <div className="max-w-7xl mx-auto">
+        <main className="min-h-screen bg-off-white md:ml-64">
+          <section className="py-12 px-4 md:px-8">
+            <div className="max-w-7xl mx-auto">
             <h1 className="font-serif text-4xl font-bold mb-8">Admin Dashboard</h1>
 
             {/* Stats Grid */}
@@ -136,7 +237,7 @@ export default function AdminDashboard() {
               <Card className="card-base p-6">
                 <h2 className="font-serif font-bold text-xl mb-4">Top Selling Books</h2>
                 <div className="space-y-4">
-                  {topBooks.map((book, idx) => (
+                  {topBooks.map((book: any, idx: number) => (
                     <div
                       key={idx}
                       className="flex items-center justify-between pb-3 border-b border-gray-200 last:border-b-0"
@@ -148,6 +249,9 @@ export default function AdminDashboard() {
                       <p className="font-bold text-coral">{formatPeso(book.revenue)}</p>
                     </div>
                   ))}
+                  {topBooks.length === 0 && (
+                    <p className="text-gray-500 text-sm text-center py-4">No sales yet</p>
+                  )}
                 </div>
               </Card>
             </div>
@@ -158,7 +262,7 @@ export default function AdminDashboard() {
               <Card className="card-base p-6">
                 <h2 className="font-serif font-bold text-xl mb-4">Recent Orders</h2>
                 <div className="space-y-3">
-                  {recentOrders.map((order) => (
+                  {recentOrders.map((order: any) => (
                     <div
                       key={order.id}
                       className="flex items-center justify-between pb-3 border-b border-gray-200 last:border-b-0"
@@ -170,11 +274,14 @@ export default function AdminDashboard() {
                       <div className="text-right">
                         <p className="font-bold text-sm">{formatPeso(order.amount)}</p>
                         <span className={`text-xs px-2 py-1 rounded-full ${getStatusColor(order.status)}`}>
-                          {order.status}
+                          {order.status.replace(/_/g, " ").charAt(0).toUpperCase() + order.status.replace(/_/g, " ").slice(1)}
                         </span>
                       </div>
                     </div>
                   ))}
+                  {recentOrders.length === 0 && (
+                    <p className="text-gray-500 text-sm text-center py-4">No orders yet</p>
+                  )}
                 </div>
               </Card>
 
@@ -185,7 +292,7 @@ export default function AdminDashboard() {
                   <h2 className="font-serif font-bold text-xl">Low Stock Alerts</h2>
                 </div>
                 <div className="space-y-3">
-                  {lowStockBooks.map((book, idx) => (
+                  {lowStockBooks.map((book: any, idx: number) => (
                     <div
                       key={idx}
                       className="flex items-center justify-between pb-3 border-b border-gray-200 last:border-b-0"
@@ -200,6 +307,9 @@ export default function AdminDashboard() {
                       </span>
                     </div>
                   ))}
+                  {lowStockBooks.length === 0 && (
+                    <p className="text-gray-500 text-sm text-center py-4">All books well stocked</p>
+                  )}
                 </div>
               </Card>
             </div>
