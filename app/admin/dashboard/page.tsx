@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { AdminSidebar } from "@/components/admin-sidebar"
-import { Footer } from "@/components/footer"
 import { Card } from "@/components/ui/card"
 import { ProtectedRoute } from "@/components/protected-route"
 import { DollarSign, Package, BookOpen, Users, AlertCircle, Loader } from "lucide-react"
@@ -368,8 +367,6 @@ export default function AdminDashboard() {
           </div>
         </section>
       </main>
-
-      <Footer />
       </>
     </ProtectedRoute>
   )

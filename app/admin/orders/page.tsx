@@ -2,7 +2,6 @@
 
 import { useEffect, useState } from "react"
 import { AdminSidebar } from "@/components/admin-sidebar"
-import { Footer } from "@/components/footer"
 import { Card } from "@/components/ui/card"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
@@ -309,7 +308,6 @@ export default function AdminOrders() {
             )}
           </div>
         </main>
-        <Footer />
       </>
     </ProtectedRoute>
   )

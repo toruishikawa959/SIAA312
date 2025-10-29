@@ -2,7 +2,6 @@
 
 import { useState } from "react"
 import { Navigation } from "@/components/navigation"
-import { Footer } from "@/components/footer"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { ProtectedRoute } from "@/components/protected-route"
@@ -182,8 +181,6 @@ export default function DataManagement() {
           </Card>
         </div>
       </main>
-
-      <Footer />
       </>
     </ProtectedRoute>
   )
