@@ -45,6 +45,15 @@ export default function AdminDashboard() {
     { month: "Apr", revenue: 0 },
     { month: "May", revenue: 0 },
   ])
+  const [last7DaysData, setLast7DaysData] = useState([
+    { date: "Day 1", revenue: 0 },
+    { date: "Day 2", revenue: 0 },
+    { date: "Day 3", revenue: 0 },
+    { date: "Day 4", revenue: 0 },
+    { date: "Day 5", revenue: 0 },
+    { date: "Day 6", revenue: 0 },
+    { date: "Day 7", revenue: 0 },
+  ])
   const [topBooks, setTopBooks] = useState<TopBook[]>([
     { title: "Loading...", sales: 0, revenue: 0 },
   ])
@@ -78,11 +87,13 @@ export default function AdminDashboard() {
 
         // Fetch orders
         const ordersResponse = await fetch("/api/orders")
-        const ordersData = ordersResponse.ok ? await ordersResponse.json() : []
+        const ordersResponseData = ordersResponse.ok ? await ordersResponse.json() : []
+        const ordersData = Array.isArray(ordersResponseData) ? ordersResponseData : ordersResponseData.orders || []
 
         // Fetch books
         const booksResponse = await fetch("/api/books")
-        const booksData = booksResponse.ok ? await booksResponse.json() : []
+        const booksResponseData = booksResponse.ok ? await booksResponse.json() : []
+        const booksData = Array.isArray(booksResponseData) ? booksResponseData : booksResponseData.books || []
 
         // Calculate stats
         const totalOrders = Array.isArray(ordersData) ? ordersData.length : 0
@@ -162,6 +173,30 @@ export default function AdminDashboard() {
         if (topBooksArray.length > 0) {
           setTopBooks(topBooksArray)
         }
+
+        // Calculate revenue for last 7 days
+        const last7Days = []
+        for (let i = 6; i >= 0; i--) {
+          const date = new Date()
+          date.setDate(date.getDate() - i)
+          const dayStart = new Date(date.getFullYear(), date.getMonth(), date.getDate())
+          const dayEnd = new Date(date.getFullYear(), date.getMonth(), date.getDate() + 1)
+
+          const dayRevenue = Array.isArray(ordersData)
+            ? ordersData
+                .filter((order: any) => {
+                  const orderDate = new Date(order.createdAt)
+                  return orderDate >= dayStart && orderDate < dayEnd
+                })
+                .reduce((sum: number, order: any) => sum + (order.totalAmount || 0), 0)
+            : 0
+
+          last7Days.push({
+            date: date.toLocaleDateString("en-US", { month: "short", day: "numeric" }),
+            revenue: dayRevenue,
+          })
+        }
+        setLast7DaysData(last7Days)
       } catch (error) {
         console.error("Error fetching dashboard data:", error)
       } finally {
@@ -218,9 +253,9 @@ export default function AdminDashboard() {
 
             {/* Charts Section */}
             <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-              {/* Revenue Chart */}
+              {/* Revenue Chart By Month */}
               <Card className="card-base p-6">
-                <h2 className="font-serif font-bold text-xl mb-4">Revenue Trend</h2>
+                <h2 className="font-serif font-bold text-xl mb-4">Revenue Trend By Month</h2>
                 <ResponsiveContainer width="100%" height={300}>
                   <LineChart data={revenueData}>
                     <CartesianGrid strokeDasharray="3 3" />
@@ -233,7 +268,24 @@ export default function AdminDashboard() {
                 </ResponsiveContainer>
               </Card>
 
-              {/* Top Selling Books */}
+              {/* Revenue Chart Last 7 Days */}
+              <Card className="card-base p-6">
+                <h2 className="font-serif font-bold text-xl mb-4">Revenue Trend Last 7 Days</h2>
+                <ResponsiveContainer width="100%" height={300}>
+                  <LineChart data={last7DaysData}>
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="date" />
+                    <YAxis />
+                    <Tooltip formatter={(value: any) => formatPeso(Number(value))} />
+                    <Legend />
+                    <Line type="monotone" dataKey="revenue" stroke="#F4B73F" strokeWidth={2} />
+                  </LineChart>
+                </ResponsiveContainer>
+              </Card>
+            </div>
+
+            {/* Top Selling Books */}
+            <div className="mb-8">
               <Card className="card-base p-6">
                 <h2 className="font-serif font-bold text-xl mb-4">Top Selling Books</h2>
                 <div className="space-y-4">
