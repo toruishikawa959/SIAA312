@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { connectToDatabase } from "@/lib/db"
 import { sendOrderConfirmationEmail, sendOrderStatusUpdateEmail, sendStaffOrderAlert } from "@/lib/email-service"
+import { incrementCouponUsage } from "@/lib/coupon-service"
 
 export async function POST(request: NextRequest) {
   try {
@@ -46,6 +47,17 @@ export async function POST(request: NextRequest) {
         )
 
         console.log("[PayMongo Webhook] Order marked as paid and confirmed")
+
+        // Increment coupon usage if a coupon was used
+        if (order.couponCode) {
+          try {
+            await incrementCouponUsage(order.couponCode)
+            console.log("[PayMongo Webhook] Coupon usage incremented:", order.couponCode)
+          } catch (couponError) {
+            console.error("[PayMongo Webhook] Failed to increment coupon usage:", couponError)
+            // Don't fail the webhook if coupon increment fails
+          }
+        }
 
         // Send confirmation email to customer
         try {

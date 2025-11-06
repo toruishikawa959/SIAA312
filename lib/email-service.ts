@@ -188,12 +188,15 @@ export async function sendOrderStatusUpdateEmail(data: {
   const { email, name, orderId, status, message, trackingUrl } = data
 
   const statusMessages: Record<string, { icon: string; title: string }> = {
+    pending: { icon: "🕐", title: "Order Received" },
     confirmed: { icon: "✓", title: "Order Confirmed" },
+    processing: { icon: "📦", title: "Being Processed" },
     preparing: { icon: "📦", title: "Being Prepared" },
     ready_for_pickup: { icon: "📍", title: "Ready for Pickup" },
     shipped: { icon: "🚚", title: "On the Way" },
     delivered: { icon: "✓", title: "Delivered" },
-    cancelled: { icon: "✗", title: "Cancelled" },
+    completed: { icon: "✅", title: "Order Completed" },
+    cancelled: { icon: "✗", title: "Order Cancelled" },
   }
 
   const statusInfo = statusMessages[status] || { icon: "ℹ️", title: "Update" }

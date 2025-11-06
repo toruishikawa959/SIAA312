@@ -41,10 +41,13 @@ export async function POST(
     const statusMessages: Record<string, string> = {
       pending: "Your order has been received and is waiting for confirmation.",
       confirmed: "Your order has been confirmed! We'll start preparing it soon.",
+      processing: "We're processing your order. It will be ready soon!",
       preparing: "We're preparing your order. It will be ready soon!",
       ready_for_pickup: "Your order is ready for pickup! Visit our store to collect it.",
       shipped: "Your order is on the way! Check back for tracking updates.",
       delivered: "Your order has been delivered! Thank you for your purchase.",
+      completed: "Your order has been completed! Thank you for shopping with us.",
+      cancelled: "Your order has been cancelled. If you have questions, please contact us.",
     }
 
     const message = statusMessages[status] || "Your order status has been updated."

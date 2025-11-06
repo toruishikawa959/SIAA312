@@ -54,3 +54,10 @@
 [2025-10-30T15:15:10.445Z] [QR Ph] Step 3: Attaching Payment Method to Intent
 [2025-10-30T15:15:11.358Z] [QR Ph] Step 3 Success - Payment attached
 [2025-10-30T15:15:11.362Z] [QR Ph] Step 3 Success - Payment attached
+[2025-11-06T15:29:13.756Z] [QR Ph] Payment Request Received {"orderId":"690cbeb7e08e07d9bb0bb4eb","amount":360.5,"email":"aamercado8074qc@student.fatima.edu.ph","name":"Andrei A Mercado"}
+[2025-11-06T15:29:13.772Z] [QR Ph] Amount conversion {"originalAmount":360.5,"amountInCents":36050}
+[2025-11-06T15:29:13.775Z] [QR Ph] Step 1: Creating Payment Intent
+[2025-11-06T15:29:14.010Z] [QR Ph] Step 1 Success - Intent ID {"paymentIntentId":"pi_wEDNfccnbTWJSqhrTad8fx17","amountInCents":36050}
+[2025-11-06T15:29:14.137Z] [QR Ph] Step 3: Attaching Payment Method to Intent
+[2025-11-06T15:29:15.079Z] [QR Ph] Step 3 Success - Payment attached
+[2025-11-06T15:29:15.091Z] [QR Ph] Step 3 Success - Payment attached
