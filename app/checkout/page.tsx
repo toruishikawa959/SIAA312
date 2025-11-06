@@ -125,7 +125,7 @@ export default function GuestCheckout() {
           price: item.price,
         })),
         deliveryMethod: formData.deliveryMethod,
-        total: subtotal + tax + deliveryFee,
+        total: subtotal + deliveryFee,
       }
 
       // If user is logged in, pass userId and shipping address
@@ -171,9 +171,8 @@ export default function GuestCheckout() {
     (sum, item) => sum + item.price * item.quantity,
     0
   )
-  const tax = subtotal * 0.12
   const deliveryFee = formData.deliveryMethod === "delivery" ? 100 : 0
-  const total = subtotal + tax + deliveryFee
+  const total = subtotal + deliveryFee
 
   if (loading) {
     return (
@@ -468,10 +467,6 @@ export default function GuestCheckout() {
                   <div className="flex justify-between text-gray-600">
                     <span>Subtotal</span>
                     <span>{formatPeso(subtotal)}</span>
-                  </div>
-                  <div className="flex justify-between text-gray-600">
-                    <span>VAT (12%)</span>
-                    <span>{formatPeso(tax)}</span>
                   </div>
                   {formData.deliveryMethod === "delivery" && (
                     <div className="flex justify-between text-gray-600">

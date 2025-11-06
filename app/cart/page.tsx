@@ -23,6 +23,8 @@ export default function Cart() {
   const [isLoggedIn, setIsLoggedIn] = useState(false)
   const [loading, setLoading] = useState(true)
   const [checkoutLoading, setCheckoutLoading] = useState(false)
+  const [stockErrors, setStockErrors] = useState<Record<string, string>>({})
+  const [checkoutError, setCheckoutError] = useState<string>("")
 
   useEffect(() => {
     // Check if user is logged in
@@ -38,38 +40,118 @@ export default function Cart() {
   const handleRemove = (bookId: string) => {
     removeFromGuestCart(bookId)
     setCartItems(cartItems.filter(item => item.bookId !== bookId))
+    // Clear any stock errors for this item
+    setStockErrors(prev => {
+      const newErrors = { ...prev }
+      delete newErrors[bookId]
+      return newErrors
+    })
   }
 
-  const handleQuantityChange = (bookId: string, newQuantity: number) => {
+  const handleQuantityChange = async (bookId: string, newQuantity: number) => {
     if (newQuantity <= 0) {
       handleRemove(bookId)
-    } else {
+      return
+    }
+
+    // Clear previous error for this item
+    setStockErrors(prev => {
+      const newErrors = { ...prev }
+      delete newErrors[bookId]
+      return newErrors
+    })
+
+    try {
+      // Fetch current stock from database
+      const response = await fetch(`/api/books?id=${bookId}`)
+      
+      if (!response.ok) {
+        setStockErrors(prev => ({
+          ...prev,
+          [bookId]: "Failed to check stock availability"
+        }))
+        return
+      }
+
+      const book = await response.json()
+
+      // Validate against available stock
+      if (newQuantity > book.stock) {
+        setStockErrors(prev => ({
+          ...prev,
+          [bookId]: `Only ${book.stock} item${book.stock !== 1 ? 's' : ''} available in stock`
+        }))
+        return
+      }
+
+      // Stock is available, proceed with update
       updateGuestCartQuantity(bookId, newQuantity)
       setCartItems(
         cartItems.map(item =>
           item.bookId === bookId ? { ...item, quantity: newQuantity } : item
         )
       )
+    } catch (error) {
+      console.error("Error checking stock:", error)
+      setStockErrors(prev => ({
+        ...prev,
+        [bookId]: "Error validating stock. Please try again."
+      }))
     }
   }
 
   const handleCheckout = async () => {
     setCheckoutLoading(true)
-    if (!isLoggedIn) {
-      // Redirect to login/signup
-      await router.push("/login")
-      setCheckoutLoading(false)
-      return
-    }
+    setCheckoutError("")
 
-    // Proceed to checkout
-    await router.push("/checkout")
-    setCheckoutLoading(false)
+    // Validate all items against current stock before checkout
+    try {
+      const validationErrors: Record<string, string> = {}
+      const stockCheckPromises = cartItems.map(async (item) => {
+        try {
+          const response = await fetch(`/api/books?id=${item.bookId}`)
+          if (!response.ok) {
+            validationErrors[item.bookId] = "Failed to verify stock"
+            return
+          }
+          const book = await response.json()
+          
+          if (item.quantity > book.stock) {
+            validationErrors[item.bookId] = `Only ${book.stock} available (you have ${item.quantity} in cart)`
+          }
+        } catch (error) {
+          validationErrors[item.bookId] = "Error verifying stock"
+        }
+      })
+
+      await Promise.all(stockCheckPromises)
+
+      // If there are any validation errors, show them and prevent checkout
+      if (Object.keys(validationErrors).length > 0) {
+        setStockErrors(validationErrors)
+        setCheckoutError("Please fix stock availability issues before proceeding to checkout.")
+        setCheckoutLoading(false)
+        // Scroll to top to show error message
+        window.scrollTo({ top: 0, behavior: "smooth" })
+        return
+      }
+
+      // All items validated, proceed with checkout
+      if (!isLoggedIn) {
+        await router.push("/login")
+      } else {
+        await router.push("/checkout")
+      }
+    } catch (error) {
+      console.error("Checkout validation error:", error)
+      setCheckoutError("An error occurred while validating your cart. Please try again.")
+    } finally {
+      setCheckoutLoading(false)
+    }
   }
 
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
-  const tax = subtotal * 0.12
-  const total = subtotal + tax
+  const total = subtotal
 
   if (loading) {
     return (
@@ -147,6 +229,18 @@ export default function Cart() {
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-8">
                 {/* Cart Items */}
                 <div className="lg:col-span-2 space-y-4">
+                  {checkoutError && (
+                    <Card className="card-base p-4 bg-red-50 border-l-4 border-red-500">
+                      <div className="flex items-start gap-3">
+                        <AlertCircle className="text-red-600 flex-shrink-0 mt-0.5" size={20} />
+                        <div className="flex-1">
+                          <h3 className="font-semibold text-red-900 mb-1">Checkout Error</h3>
+                          <p className="text-red-800 text-sm">{checkoutError}</p>
+                        </div>
+                      </div>
+                    </Card>
+                  )}
+
                   {!isLoggedIn && (
                     <Card className="card-base p-4 bg-blue-50 border-l-4 border-blue-500">
                       <div className="flex items-start gap-3">
@@ -172,51 +266,59 @@ export default function Cart() {
                   )}
 
                   {cartItems.map((item) => (
-                    <Card key={item.bookId} className="card-base p-4 flex gap-4">
-                      <div className="w-20 h-28 bg-gray-200 rounded overflow-hidden flex-shrink-0">
-                        {item.image ? (
-                          <img
-                            src={item.image}
-                            alt={item.title}
-                            className="w-full h-full object-cover"
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-gray-100 flex items-center justify-center">
-                            <ShoppingBag size={20} className="text-gray-400" />
+                    <Card key={item.bookId} className="card-base p-4">
+                      <div className="flex gap-4">
+                        <div className="w-20 h-28 bg-gray-200 rounded overflow-hidden flex-shrink-0">
+                          {item.image ? (
+                            <img
+                              src={item.image}
+                              alt={item.title}
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                              <ShoppingBag size={20} className="text-gray-400" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <h3 className="font-serif font-bold">{item.title}</h3>
+                          <p className="text-gray-600 text-sm">{item.author}</p>
+                          <div className="flex items-center gap-2 mt-2">
+                            <button
+                              onClick={() => handleQuantityChange(item.bookId, item.quantity - 1)}
+                              className="border border-gray-300 px-2 py-1 rounded hover:bg-gray-100"
+                              title="Decrease quantity"
+                            >
+                              −
+                            </button>
+                            <span className="px-4 font-semibold">{item.quantity}</span>
+                            <button
+                              onClick={() => handleQuantityChange(item.bookId, item.quantity + 1)}
+                              className="border border-gray-300 px-2 py-1 rounded hover:bg-gray-100"
+                              title="Increase quantity"
+                            >
+                              +
+                            </button>
                           </div>
-                        )}
-                      </div>
-                      <div className="flex-1">
-                        <h3 className="font-serif font-bold">{item.title}</h3>
-                        <p className="text-gray-600 text-sm">{item.author}</p>
-                        <div className="flex items-center gap-2 mt-2">
+                        </div>
+                        <div className="text-right flex flex-col justify-between">
+                          <p className="font-bold">{formatPeso(item.price * item.quantity)}</p>
                           <button
-                            onClick={() => handleQuantityChange(item.bookId, item.quantity - 1)}
-                            className="border border-gray-300 px-2 py-1 rounded hover:bg-gray-100"
-                            title="Decrease quantity"
+                            onClick={() => handleRemove(item.bookId)}
+                            className="text-coral hover:text-red-600 mt-2"
+                            title="Remove from cart"
                           >
-                            −
-                          </button>
-                          <span className="px-4 font-semibold">{item.quantity}</span>
-                          <button
-                            onClick={() => handleQuantityChange(item.bookId, item.quantity + 1)}
-                            className="border border-gray-300 px-2 py-1 rounded hover:bg-gray-100"
-                            title="Increase quantity"
-                          >
-                            +
+                            <Trash2 size={20} />
                           </button>
                         </div>
                       </div>
-                      <div className="text-right flex flex-col justify-between">
-                        <p className="font-bold">{formatPeso(item.price * item.quantity)}</p>
-                        <button
-                          onClick={() => handleRemove(item.bookId)}
-                          className="text-coral hover:text-red-600 mt-2"
-                          title="Remove from cart"
-                        >
-                          <Trash2 size={20} />
-                        </button>
-                      </div>
+                      {stockErrors[item.bookId] && (
+                        <div className="mt-3 flex items-start gap-2 bg-red-50 border border-red-200 rounded p-3">
+                          <AlertCircle className="text-red-600 flex-shrink-0 mt-0.5" size={16} />
+                          <p className="text-red-800 text-sm font-medium">{stockErrors[item.bookId]}</p>
+                        </div>
+                      )}
                     </Card>
                   ))}
                 </div>
@@ -229,10 +331,6 @@ export default function Cart() {
                       <div className="flex justify-between text-gray-600">
                         <span>Subtotal</span>
                         <span>{formatPeso(subtotal)}</span>
-                      </div>
-                      <div className="flex justify-between text-gray-600">
-                        <span>VAT (12%)</span>
-                        <span>{formatPeso(tax)}</span>
                       </div>
                     </div>
                     <div className="flex justify-between mb-6">

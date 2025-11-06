@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from "next/server"
 import { connectToDatabase } from "@/lib/db"
 import { ObjectId } from "mongodb"
+import { applyProcessingFee } from "@/lib/pricing"
 
 /**
  * POST /api/cart/merge
@@ -55,7 +56,7 @@ export async function POST(request: NextRequest) {
           bookId: new ObjectId(guestItem.bookId),
           title: book.title,
           author: book.author,
-          price: book.price,
+          price: applyProcessingFee(book.price),
           quantity: guestItem.quantity,
           cover: book.cover,
           addedAt: new Date(),

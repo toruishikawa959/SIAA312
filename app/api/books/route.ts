@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { ObjectId } from "mongodb"
 import { connectToDatabase } from "@/lib/db"
 import { Book } from "@/lib/types"
+import { applyProcessingFee } from "@/lib/pricing"
 
 export async function GET(request: NextRequest) {
   try {
@@ -23,9 +24,11 @@ export async function GET(request: NextRequest) {
       }
 
       // Ensure active property is set (default to true if not set)
+      // Apply 3% processing fee to the price
       const bookWithActive = {
         ...book,
         active: book.active !== false,
+        price: applyProcessingFee(book.price),
       }
 
       return NextResponse.json(bookWithActive, { status: 200 })
@@ -55,9 +58,11 @@ export async function GET(request: NextRequest) {
     const books = await query.toArray()
 
     // Ensure all books have active property (default to true if not set)
+    // Apply 3% processing fee to all prices
     const booksWithActive = books.map((book) => ({
       ...book,
       active: book.active !== false, // Treat undefined as true
+      price: applyProcessingFee(book.price),
     }))
 
     return NextResponse.json({ books: booksWithActive }, { status: 200 })

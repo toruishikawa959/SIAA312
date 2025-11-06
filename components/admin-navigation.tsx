@@ -15,10 +15,12 @@ export function AdminNavigation({ userType = "admin" }) {
           { label: "Inventory", href: "/admin/inventory" },
           { label: "Orders", href: "/admin/orders" },
           { label: "Users", href: "/admin/users" },
+          { label: "Newsletter", href: "/admin/newsletter" },
         ]
       : [
           { label: "Orders", href: "/staff/orders" },
           { label: "Inventory", href: "/staff/inventory" },
+          { label: "Newsletter", href: "/staff/newsletter" },
         ]
 
   return (

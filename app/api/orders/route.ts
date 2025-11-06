@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server"
 import { ObjectId } from "mongodb"
 import { connectToDatabase } from "@/lib/db"
 import { Order, OrderItem, Book } from "@/lib/types"
+import { applyProcessingFee } from "@/lib/pricing"
 
 export async function POST(request: NextRequest) {
   try {
@@ -71,7 +72,9 @@ export async function POST(request: NextRequest) {
         )
       }
 
-      const itemTotal = book.price * item.quantity
+      // Apply 3% processing fee to the base price
+      const priceWithFee = applyProcessingFee(book.price)
+      const itemTotal = priceWithFee * item.quantity
       totalAmount += itemTotal
 
       orderItems.push({
@@ -79,7 +82,7 @@ export async function POST(request: NextRequest) {
         title: book.title,
         author: book.author,
         quantity: item.quantity,
-        price: book.price,
+        price: priceWithFee,
       })
 
       // Update book stock

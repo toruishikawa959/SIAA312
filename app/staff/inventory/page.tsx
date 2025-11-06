@@ -47,6 +47,9 @@ interface CropState {
 export default function StaffInventory() {
   const [searchTerm, setSearchTerm] = useState("")
   const [books, setBooks] = useState<Book[]>([])
+  const [categories, setCategories] = useState<string[]>([])
+  const [selectedCategory, setSelectedCategory] = useState<string>("all")
+  const [showInactive, setShowInactive] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState("")
   const [showModal, setShowModal] = useState(false)
@@ -129,6 +132,7 @@ export default function StaffInventory() {
 
   useEffect(() => {
     fetchBooks()
+    fetchCategories()
   }, [])
 
   const fetchBooks = async () => {
@@ -151,11 +155,34 @@ export default function StaffInventory() {
     }
   }
 
-  const filteredBooks = books.filter(
-    (book) =>
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch("/api/books/categories")
+      if (!res.ok) throw new Error("Failed to fetch categories")
+      const data = await res.json()
+      setCategories(data.categories || [])
+    } catch (err) {
+      console.error("Failed to fetch categories:", err)
+    }
+  }
+
+  const filteredBooks = books.filter((book) => {
+    // Search filter
+    const matchesSearch =
       book.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
-      book.author.toLowerCase().includes(searchTerm.toLowerCase()),
-  )
+      book.author.toLowerCase().includes(searchTerm.toLowerCase())
+
+    // Category filter
+    const matchesCategory = selectedCategory === "all" || book.category === selectedCategory
+
+    // Active/Inactive filter
+    const matchesActiveStatus = showInactive ? book.active === false : book.active !== false
+
+    return matchesSearch && matchesCategory && matchesActiveStatus
+  })
+
+  const activeCount = books.filter((book) => book.active !== false).length
+  const inactiveCount = books.filter((book) => book.active === false).length
 
   const handleOpenAddModal = () => {
     setEditingBook(null)
@@ -543,21 +570,70 @@ export default function StaffInventory() {
                 </Card>
               ) : (
                 <>
-                  {/* Search Bar */}
-                  <div className="mb-8 relative">
-                    <Search className="absolute left-3 top-3 text-gray-400" size={20} />
-                    <Input
-                      placeholder="Search by title or author..."
-                      value={searchTerm}
-                      onChange={(e) => setSearchTerm(e.target.value)}
-                      className="pl-10 rounded-full border-2 border-gray-300 focus:border-gold"
-                    />
+                  {/* Filters */}
+                  <div className="mb-6 space-y-4">
+                    {/* Search Bar */}
+                    <div className="relative">
+                      <Search className="absolute left-3 top-3 text-gray-400" size={20} />
+                      <Input
+                        placeholder="Search by title or author..."
+                        value={searchTerm}
+                        onChange={(e) => setSearchTerm(e.target.value)}
+                        className="pl-10 rounded-full border-2 border-gray-300 focus:border-gold"
+                      />
+                    </div>
+
+                    {/* Filter Controls */}
+                    <div className="flex flex-col md:flex-row gap-4">
+                      {/* Category Filter */}
+                      <div className="flex-1">
+                        <select
+                          value={selectedCategory}
+                          onChange={(e) => setSelectedCategory(e.target.value)}
+                          aria-label="Filter by category"
+                          className="w-full px-4 py-2 border-2 border-gray-300 rounded-full focus:border-gold focus:outline-none"
+                        >
+                          <option value="all">All Categories</option>
+                          {categories.map((category) => (
+                            <option key={category} value={category}>
+                              {category}
+                            </option>
+                          ))}
+                        </select>
+                      </div>
+
+                      {/* Active/Inactive Toggle */}
+                      <div className="flex gap-2">
+                        <Button
+                          onClick={() => setShowInactive(false)}
+                          className={`${
+                            !showInactive
+                              ? "bg-gold text-charcoal"
+                              : "bg-gray-200 text-gray-600 hover:bg-gray-300"
+                          } font-semibold`}
+                        >
+                          Active Books ({activeCount})
+                        </Button>
+                        <Button
+                          onClick={() => setShowInactive(true)}
+                          className={`${
+                            showInactive
+                              ? "bg-coral text-white"
+                              : "bg-gray-200 text-gray-600 hover:bg-gray-300"
+                          } font-semibold`}
+                        >
+                          Inactive Books ({inactiveCount})
+                        </Button>
+                      </div>
+                    </div>
                   </div>
 
                   {filteredBooks.length === 0 ? (
                     <Card className="card-base p-8 text-center">
                       <p className="text-gray-500">
-                        {books.length === 0 ? "No books in inventory. Create one to get started!" : "No books found matching your search."}
+                        {books.length === 0
+                          ? "No books in inventory. Create one to get started!"
+                          : `No ${showInactive ? "inactive" : "active"} books found matching your filters.`}
                       </p>
                     </Card>
                   ) : (

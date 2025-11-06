@@ -47,3 +47,10 @@
 [2025-10-28T04:01:03.218Z] [QR Ph] Step 3: Attaching Payment Method to Intent
 [2025-10-28T04:01:04.563Z] [QR Ph] Step 3 Success - Payment attached
 [2025-10-28T04:01:04.569Z] [QR Ph] Step 3 Success - Payment attached
+[2025-10-30T15:15:09.991Z] [QR Ph] Payment Request Received {"orderId":"690380f32fde9708e86d72ce","amount":2059.9216}
+[2025-10-30T15:15:10.002Z] [QR Ph] Amount conversion {"originalAmount":2059.9216,"amountInCents":205992}
+[2025-10-30T15:15:10.005Z] [QR Ph] Step 1: Creating Payment Intent
+[2025-10-30T15:15:10.247Z] [QR Ph] Step 1 Success - Intent ID {"paymentIntentId":"pi_zWnVVo7cQthXwQA1zqLmehWh","amountInCents":205992}
+[2025-10-30T15:15:10.445Z] [QR Ph] Step 3: Attaching Payment Method to Intent
+[2025-10-30T15:15:11.358Z] [QR Ph] Step 3 Success - Payment attached
+[2025-10-30T15:15:11.362Z] [QR Ph] Step 3 Success - Payment attached
