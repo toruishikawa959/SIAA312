@@ -1,0 +1,42 @@
+[{
+  "_id": {
+    "$oid": "68fe68fd3f5713864ff13d78"
+  },
+  "userId": {
+    "$oid": "68fe68fc3f5713864ff13d77"
+  },
+  "label": "Home",
+  "fullAddress": "Barangay 175, Zone 15, Camarin, District 1, Caloocan, Northern Manila District, Metro Manila, 1422, Philippines",
+  "phone": "09652798828",
+  "latitude": 14.760146098202835,
+  "longitude": 121.0410668379185,
+  "details": "",
+  "isDefault": true,
+  "createdAt": {
+    "$date": "2025-10-26T18:31:25.516Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-26T18:31:25.516Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "690384282fde9708e86d72d0"
+  },
+  "userId": {
+    "$oid": "690384242fde9708e86d72cf"
+  },
+  "label": "Home",
+  "fullAddress": "Barangay 175, Zone 15, Camarin, District 1, Caloocan, Northern Manila District, Metro Manila, 1422, Philippines",
+  "phone": "9652798828",
+  "latitude": 14.760145611884383,
+  "longitude": 121.04108422994615,
+  "details": "",
+  "isDefault": true,
+  "createdAt": {
+    "$date": "2025-10-30T15:28:40.064Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-30T15:28:40.064Z"
+  }
+}]

@@ -1,0 +1,57 @@
+[{
+  "_id": {
+    "$oid": "68fe68fc3f5713864ff13d77"
+  },
+  "email": "spadev99@gmail.com",
+  "password": "bb8362ed067ff1365ab4fd894f2b1e7880927d5ef3feafd759fe903d2dfbfd09",
+  "firstName": "Andrei",
+  "lastName": "MERCADO",
+  "role": "customer",
+  "createdAt": {
+    "$date": "2025-10-26T18:31:24.650Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-26T20:04:55.697Z"
+  },
+  "birthDate": {
+    "$date": "2002-09-14T00:00:00.000Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68fe84d9a9b17ae205fcf28e"
+  },
+  "email": "staff@gmail.com",
+  "password": "bb8362ed067ff1365ab4fd894f2b1e7880927d5ef3feafd759fe903d2dfbfd09",
+  "firstName": "Andrei",
+  "lastName": "MERCADO",
+  "role": "staff",
+  "createdAt": {
+    "$date": "2025-10-26T18:31:24.650Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-26T20:04:55.697Z"
+  },
+  "birthDate": {
+    "$date": "2002-09-14T00:00:00.000Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6901cbd53f3b5d4325266006"
+  },
+  "email": "admin@gmail.com",
+  "password": "bb8362ed067ff1365ab4fd894f2b1e7880927d5ef3feafd759fe903d2dfbfd09",
+  "firstName": "Andrei",
+  "lastName": "MERCADO",
+  "role": "admin",
+  "createdAt": {
+    "$date": "2025-10-26T18:31:24.650Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-26T20:04:55.697Z"
+  },
+  "birthDate": {
+    "$date": "2002-09-14T00:00:00.000Z"
+  }
+}]

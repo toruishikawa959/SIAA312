@@ -56,6 +56,9 @@ export async function POST(request: NextRequest) {
       expirationDate,
       isActive,
       maxUses,
+      applicableCategories,
+      maxUsesPerUser,
+      isFirstTimeCustomerOnly,
     } = body
 
     // Validate required fields
@@ -75,6 +78,9 @@ export async function POST(request: NextRequest) {
       expirationDate: new Date(expirationDate),
       isActive: isActive !== undefined ? isActive : true,
       maxUses: maxUses || undefined,
+      applicableCategories: applicableCategories || undefined,
+      maxUsesPerUser: maxUsesPerUser || undefined,
+      isFirstTimeCustomerOnly: isFirstTimeCustomerOnly || false,
       usedCount: 0,
     })
 

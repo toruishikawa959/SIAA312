@@ -51,7 +51,12 @@ export async function POST(request: NextRequest) {
         // Increment coupon usage if a coupon was used
         if (order.couponCode) {
           try {
-            await incrementCouponUsage(order.couponCode)
+            await incrementCouponUsage(
+              order.couponCode,
+              order._id,
+              order.userId?.toString(),
+              order.guestEmail
+            )
             console.log("[PayMongo Webhook] Coupon usage incremented:", order.couponCode)
           } catch (couponError) {
             console.error("[PayMongo Webhook] Failed to increment coupon usage:", couponError)

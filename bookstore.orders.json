@@ -1,0 +1,300 @@
+[{
+  "_id": {
+    "$oid": "68fef94c50250a2ec0ca82fd"
+  },
+  "items": [
+    {
+      "bookId": {
+        "$oid": "68fcd4fce381cc48a0724560"
+      },
+      "title": "The Great Gatsby",
+      "author": "F. Scott Fitzgerald",
+      "quantity": 2,
+      "price": 249.99
+    }
+  ],
+  "totalAmount": 559.9776,
+  "status": "delivered",
+  "paymentStatus": "paid",
+  "deliveryMethod": "pickup",
+  "createdAt": {
+    "$date": "2025-10-27T04:47:08.504Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-28T01:27:40.844Z"
+  },
+  "guestEmail": "spadev99@gmail.com",
+  "guestName": "Andrei mercado",
+  "guestPhone": "+639652798828",
+  "shippingAddress": "Store Pickup",
+  "paymentMethod": "qrph",
+  "paymongoPaymentIntentId": "pi_X1XM2tKiwLzSczKBPzK2Dkac",
+  "paymongoPaymentMethodId": "pm_2df3yyakWkAof8a1reCbeak4",
+  "confirmedAt": {
+    "$date": "2025-10-27T04:58:13.862Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "68fefc3650250a2ec0ca82fe"
+  },
+  "items": [
+    {
+      "bookId": {
+        "$oid": "68fcd4fce381cc48a0724560"
+      },
+      "title": "The Great Gatsby",
+      "author": "F. Scott Fitzgerald",
+      "quantity": 1,
+      "price": 249.99
+    }
+  ],
+  "totalAmount": 279.9888,
+  "status": "completed",
+  "paymentStatus": "paid",
+  "deliveryMethod": "pickup",
+  "createdAt": {
+    "$date": "2025-10-27T04:59:34.377Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-30T15:19:50.879Z"
+  },
+  "guestEmail": "spadev99@gmail.com",
+  "guestName": "Andrei mercado",
+  "guestPhone": "+639652798828",
+  "shippingAddress": "Store Pickup",
+  "paymentMethod": "qrph",
+  "paymongoPaymentIntentId": "pi_Ai2jXgsRtPNh5SqrY9ob1LXH",
+  "paymongoPaymentMethodId": "pm_NRhNn1kZoMTt6e51RYvibxW1",
+  "confirmedAt": {
+    "$date": "2025-10-27T04:59:46.742Z"
+  },
+  "readyForPickupAt": {
+    "$date": "2025-10-28T00:59:42.110Z"
+  },
+  "deliveredAt": {
+    "$date": "2025-10-28T00:59:46.057Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6900135c316140afceeed3dc"
+  },
+  "items": [
+    {
+      "bookId": {
+        "$oid": "68fcd4fce381cc48a0724562"
+      },
+      "title": "1984",
+      "author": "George Orwell",
+      "quantity": 2,
+      "price": 399.99
+    }
+  ],
+  "totalAmount": 995.9776,
+  "status": "completed",
+  "paymentStatus": "paid",
+  "deliveryMethod": "delivery",
+  "createdAt": {
+    "$date": "2025-10-28T00:50:36.316Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-29T03:48:02.219Z"
+  },
+  "guestEmail": "spadev99@gmail.com",
+  "guestName": "Andrei mercado",
+  "guestPhone": "+639652798828",
+  "shippingAddress": "BLOCK 8 LOT 6 GOLDHILLS PLACE SUBD. LAFORTEZA, CAMARIN NORTH CALOOCAN CITY, Calooocan North 1422",
+  "paymentMethod": "qrph",
+  "paymongoPaymentIntentId": "pi_T9mrLg63i93PjukHjTLGEPGE",
+  "paymongoPaymentMethodId": "pm_PtKHANatSJ4mSoXK4s9wB6YR",
+  "confirmedAt": {
+    "$date": "2025-10-28T00:58:45.240Z"
+  },
+  "readyForPickupAt": {
+    "$date": "2025-10-28T00:59:36.984Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "6900161d316140afceeed3dd"
+  },
+  "items": [
+    {
+      "bookId": {
+        "$oid": "68fcd4fce381cc48a0724560"
+      },
+      "title": "The Great Gatsby",
+      "author": "F. Scott Fitzgerald",
+      "quantity": 2,
+      "price": 249.99
+    }
+  ],
+  "totalAmount": 559.9776,
+  "status": "completed",
+  "paymentStatus": "paid",
+  "deliveryMethod": "pickup",
+  "createdAt": {
+    "$date": "2025-10-28T01:02:21.180Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-29T03:47:48.814Z"
+  },
+  "guestEmail": "spadev99@gmail.com",
+  "guestName": "Andrei mercado",
+  "guestPhone": "+639652798828",
+  "shippingAddress": "Store Pickup",
+  "paymentMethod": "qrph",
+  "paymongoPaymentIntentId": "pi_aCsBd6am4s99baVKjiEy5tuy",
+  "paymongoPaymentMethodId": "pm_kKEidFxYmkYvV5Ca2jDJH4BX",
+  "confirmedAt": {
+    "$date": "2025-10-28T01:03:03.510Z"
+  },
+  "readyForPickupAt": {
+    "$date": "2025-10-28T01:05:03.471Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69001e70935e1d83e13a16ac"
+  },
+  "items": [
+    {
+      "bookId": {
+        "$oid": "68fcd4fce381cc48a0724560"
+      },
+      "title": "The Great Gatsby",
+      "author": "F. Scott Fitzgerald",
+      "quantity": 1,
+      "price": 249.99
+    }
+  ],
+  "totalAmount": 279.9888,
+  "status": "ready_for_pickup",
+  "paymentStatus": "paid",
+  "deliveryMethod": "pickup",
+  "createdAt": {
+    "$date": "2025-10-28T01:37:52.243Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-29T03:48:29.033Z"
+  },
+  "guestEmail": "thehecksopogi@gmail.com",
+  "guestName": "Spade Admin",
+  "guestPhone": "+639652798828",
+  "shippingAddress": "Store Pickup",
+  "paymentMethod": "qrph",
+  "paymongoPaymentIntentId": "pi_PEyZP5tef9JingJ2AcxDNXBc",
+  "paymongoPaymentMethodId": "pm_jNKJH2E4MtKo3cXB6jY3sGpL",
+  "confirmedAt": {
+    "$date": "2025-10-28T01:39:27.297Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "69003e92e591fad874bdf311"
+  },
+  "items": [
+    {
+      "bookId": {
+        "$oid": "68fcd4fce381cc48a0724561"
+      },
+      "title": "To Kill a Mockingbird",
+      "author": "Harper Lee",
+      "quantity": 1,
+      "price": 449.99
+    }
+  ],
+  "totalAmount": 503.9888,
+  "status": "ready_for_pickup",
+  "paymentStatus": "paid",
+  "deliveryMethod": "pickup",
+  "createdAt": {
+    "$date": "2025-10-28T03:54:58.455Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-29T03:48:17.840Z"
+  },
+  "userId": {
+    "$oid": "68fe68fc3f5713864ff13d77"
+  },
+  "shippingAddress": "Store Pickup",
+  "paymentMethod": "qrph",
+  "paymongoPaymentIntentId": "pi_QcHcsKd6LZH66zRR3RK9rA12",
+  "paymongoPaymentMethodId": "pm_PHv9j6KFSfJDP224Tk1UT6tw",
+  "confirmedAt": {
+    "$date": "2025-10-28T04:03:19.194Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "690380f32fde9708e86d72ce"
+  },
+  "items": [
+    {
+      "bookId": {
+        "$oid": "68fcd4fce381cc48a0724560"
+      },
+      "title": "The Great Gatsby",
+      "author": "F. Scott Fitzgerald",
+      "quantity": 7,
+      "price": 249.99
+    }
+  ],
+  "totalAmount": 2059.9216,
+  "status": "delivered",
+  "paymentStatus": "paid",
+  "deliveryMethod": "delivery",
+  "createdAt": {
+    "$date": "2025-10-30T15:14:59.675Z"
+  },
+  "updatedAt": {
+    "$date": "2025-10-30T15:19:25.852Z"
+  },
+  "userId": {
+    "$oid": "68fe68fc3f5713864ff13d77"
+  },
+  "shippingAddress": "BLOCK 8 LOT 6 GOLDHILLS PLACE SUBD. LAFORTEZA, CAMARIN NORTH CALOOCAN CITY, Calooocan North 1422",
+  "paymentMethod": "qrph",
+  "paymongoPaymentIntentId": "pi_zWnVVo7cQthXwQA1zqLmehWh",
+  "paymongoPaymentMethodId": "pm_WTvzP8Fkj27aqSxLXZ9i6sLC",
+  "confirmedAt": {
+    "$date": "2025-10-30T15:16:06.203Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "690cbeb7e08e07d9bb0bb4eb"
+  },
+  "items": [
+    {
+      "bookId": {
+        "$oid": "68fcd4fce381cc48a0724560"
+      },
+      "title": "The Great Gatsby",
+      "author": "F. Scott Fitzgerald",
+      "quantity": 1,
+      "price": 360.5
+    }
+  ],
+  "totalAmount": 360.5,
+  "status": "confirmed",
+  "paymentStatus": "paid",
+  "deliveryMethod": "pickup",
+  "createdAt": {
+    "$date": "2025-11-06T15:28:55.560Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-06T15:30:43.582Z"
+  },
+  "guestEmail": "aamercado8074qc@student.fatima.edu.ph",
+  "guestName": "Andrei A Mercado",
+  "guestPhone": "+639952456765",
+  "shippingAddress": "Store Pickup",
+  "paymentMethod": "qrph",
+  "paymongoPaymentIntentId": "pi_wEDNfccnbTWJSqhrTad8fx17",
+  "paymongoPaymentMethodId": "pm_nGL6K848J5Aep133mtxYpEK9",
+  "confirmedAt": {
+    "$date": "2025-11-06T15:30:43.582Z"
+  }
+}]

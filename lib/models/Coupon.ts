@@ -9,6 +9,9 @@ export interface ICoupon extends Document {
   isActive: boolean
   maxUses?: number
   usedCount: number
+  applicableCategories?: string[]
+  maxUsesPerUser?: number
+  isFirstTimeCustomerOnly?: boolean
   createdAt: Date
   updatedAt: Date
 }
@@ -61,6 +64,22 @@ const CouponSchema = new Schema<ICoupon>(
       type: Number,
       default: 0,
       min: [0, "Used count cannot be negative"],
+    },
+    applicableCategories: {
+      type: [String],
+      default: undefined,
+    },
+    maxUsesPerUser: {
+      type: Number,
+      min: [1, "Max uses per user must be at least 1"],
+      validate: {
+        validator: Number.isInteger,
+        message: "Max uses per user must be an integer",
+      },
+    },
+    isFirstTimeCustomerOnly: {
+      type: Boolean,
+      default: false,
     },
   },
   {

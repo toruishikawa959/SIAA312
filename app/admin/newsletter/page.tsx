@@ -4,7 +4,7 @@ import { useEffect, useState } from "react"
 import { AdminNavigation } from "@/components/admin-navigation"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
-import { Mail, Trash2, ToggleLeft, ToggleRight, Search, Download, Users, UserCheck, UserX } from "lucide-react"
+import { Mail, Trash2, ToggleLeft, ToggleRight, Search, Download, Users, UserCheck, UserX, Send } from "lucide-react"
 
 interface Subscriber {
   _id: string
@@ -29,6 +29,14 @@ export default function AdminNewsletterPage() {
   const [filter, setFilter] = useState<"all" | "active" | "inactive">("all")
   const [searchQuery, setSearchQuery] = useState("")
   const [actionLoading, setActionLoading] = useState<string | null>(null)
+  const [showEmailModal, setShowEmailModal] = useState(false)
+  const [emailForm, setEmailForm] = useState({
+    subject: "",
+    message: "",
+    recipientType: "active" as "all" | "active" | "inactive",
+  })
+  const [sendingEmail, setSendingEmail] = useState(false)
+  const [emailStatus, setEmailStatus] = useState<{ type: "success" | "error"; message: string } | null>(null)
 
   useEffect(() => {
     fetchSubscribers()
@@ -99,6 +107,59 @@ export default function AdminNewsletterPage() {
     }
   }
 
+  const handleSendNewsletter = async (e: React.FormEvent) => {
+    e.preventDefault()
+    
+    if (!emailForm.subject.trim() || !emailForm.message.trim()) {
+      setEmailStatus({ type: "error", message: "Subject and message are required" })
+      return
+    }
+
+    const recipientCount = emailForm.recipientType === "all" ? stats.total : 
+                          emailForm.recipientType === "active" ? stats.active : stats.inactive
+
+    if (recipientCount === 0) {
+      setEmailStatus({ type: "error", message: "No subscribers to send to" })
+      return
+    }
+
+    if (!confirm(`Send this newsletter to ${recipientCount} ${emailForm.recipientType} subscriber(s)?`)) {
+      return
+    }
+
+    try {
+      setSendingEmail(true)
+      setEmailStatus(null)
+
+      const response = await fetch("/api/newsletter/send", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(emailForm),
+      })
+
+      const data = await response.json()
+
+      if (response.ok) {
+        setEmailStatus({ 
+          type: "success", 
+          message: `Newsletter sent successfully to ${data.recipientCount} subscriber(s)!` 
+        })
+        setEmailForm({ subject: "", message: "", recipientType: "active" })
+        setTimeout(() => {
+          setShowEmailModal(false)
+          setEmailStatus(null)
+        }, 2000)
+      } else {
+        setEmailStatus({ type: "error", message: data.error || "Failed to send newsletter" })
+      }
+    } catch (error) {
+      console.error("Error sending newsletter:", error)
+      setEmailStatus({ type: "error", message: "Failed to send newsletter" })
+    } finally {
+      setSendingEmail(false)
+    }
+  }
+
   const handleExportCSV = () => {
     const csv = [
       ["Email", "Status", "Subscribed At", "Last Updated"],
@@ -159,10 +220,19 @@ export default function AdminNewsletterPage() {
           {/* Header */}
           <div className="flex justify-between items-center mb-8">
             <h1 className="font-serif text-4xl font-bold">Newsletter Management</h1>
-            <Button onClick={handleExportCSV} className="btn-secondary flex items-center gap-2">
-              <Download size={20} />
-              Export CSV
-            </Button>
+            <div className="flex gap-3">
+              <Button 
+                onClick={() => setShowEmailModal(true)} 
+                className="bg-coral hover:bg-red-600 text-white flex items-center gap-2"
+              >
+                <Send size={20} />
+                Send Newsletter
+              </Button>
+              <Button onClick={handleExportCSV} className="btn-secondary flex items-center gap-2">
+                <Download size={20} />
+                Export CSV
+              </Button>
+            </div>
           </div>
 
           {/* Stats Cards */}
@@ -328,6 +398,159 @@ export default function AdminNewsletterPage() {
           </Card>
         </div>
       </main>
+
+      {/* Email Composer Modal */}
+      {showEmailModal && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
+          <Card className="w-full max-w-3xl max-h-[90vh] overflow-y-auto p-6">
+            <div className="flex justify-between items-center mb-6">
+              <h2 className="font-serif font-bold text-2xl flex items-center gap-2">
+                <Send size={24} />
+                Compose Newsletter
+              </h2>
+              <button
+                onClick={() => {
+                  setShowEmailModal(false)
+                  setEmailStatus(null)
+                }}
+                className="text-gray-500 hover:text-gray-700 text-2xl leading-none"
+              >
+                ×
+              </button>
+            </div>
+
+            <form onSubmit={handleSendNewsletter} className="space-y-4">
+              {/* Recipient Type */}
+              <div>
+                <label className="block text-sm font-semibold mb-2">Send to:</label>
+                <div className="flex gap-3">
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="recipientType"
+                      value="active"
+                      checked={emailForm.recipientType === "active"}
+                      onChange={(e) => setEmailForm({ ...emailForm, recipientType: e.target.value as any })}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-sm">
+                      Active Subscribers ({stats.active})
+                    </span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="recipientType"
+                      value="all"
+                      checked={emailForm.recipientType === "all"}
+                      onChange={(e) => setEmailForm({ ...emailForm, recipientType: e.target.value as any })}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-sm">
+                      All Subscribers ({stats.total})
+                    </span>
+                  </label>
+                  <label className="flex items-center gap-2 cursor-pointer">
+                    <input
+                      type="radio"
+                      name="recipientType"
+                      value="inactive"
+                      checked={emailForm.recipientType === "inactive"}
+                      onChange={(e) => setEmailForm({ ...emailForm, recipientType: e.target.value as any })}
+                      className="w-4 h-4"
+                    />
+                    <span className="text-sm">
+                      Inactive Subscribers ({stats.inactive})
+                    </span>
+                  </label>
+                </div>
+              </div>
+
+              {/* Subject */}
+              <div>
+                <label className="block text-sm font-semibold mb-2">Subject *</label>
+                <input
+                  type="text"
+                  value={emailForm.subject}
+                  onChange={(e) => setEmailForm({ ...emailForm, subject: e.target.value })}
+                  placeholder="Enter email subject"
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-coral focus:border-transparent"
+                  required
+                  disabled={sendingEmail}
+                />
+              </div>
+
+              {/* Message */}
+              <div>
+                <label className="block text-sm font-semibold mb-2">Message *</label>
+                <textarea
+                  value={emailForm.message}
+                  onChange={(e) => setEmailForm({ ...emailForm, message: e.target.value })}
+                  placeholder="Enter your newsletter message..."
+                  rows={12}
+                  className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-coral focus:border-transparent resize-none"
+                  required
+                  disabled={sendingEmail}
+                />
+                <p className="text-xs text-gray-500 mt-1">
+                  Tip: Use line breaks to format your message. Keep it concise and engaging!
+                </p>
+              </div>
+
+              {/* Status Messages */}
+              {emailStatus && (
+                <div className={`p-4 rounded-lg ${
+                  emailStatus.type === "success" 
+                    ? "bg-green-50 border border-green-200 text-green-800" 
+                    : "bg-red-50 border border-red-200 text-red-800"
+                }`}>
+                  {emailStatus.message}
+                </div>
+              )}
+
+              {/* Action Buttons */}
+              <div className="flex gap-3 pt-4">
+                <button
+                  type="submit"
+                  disabled={sendingEmail}
+                  className="flex-1 bg-coral text-white font-semibold py-3 rounded-lg hover:bg-red-600 transition disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
+                >
+                  {sendingEmail ? (
+                    <>
+                      <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
+                      Sending...
+                    </>
+                  ) : (
+                    <>
+                      <Send size={20} />
+                      Send Newsletter
+                    </>
+                  )}
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setShowEmailModal(false)
+                    setEmailStatus(null)
+                  }}
+                  disabled={sendingEmail}
+                  className="flex-1 border border-gray-300 text-gray-700 font-semibold py-3 rounded-lg hover:bg-gray-50 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  Cancel
+                </button>
+              </div>
+
+              {/* Note about email service */}
+              <div className="mt-4 p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <p className="text-sm text-blue-800">
+                  <strong>Note:</strong> Currently in development mode. Emails are logged to console. 
+                  To send real emails, integrate with SendGrid, AWS SES, Mailgun, or similar service.
+                </p>
+              </div>
+            </form>
+          </Card>
+        </div>
+      )}
     </>
   )
 }

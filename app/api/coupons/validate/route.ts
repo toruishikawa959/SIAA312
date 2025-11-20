@@ -10,7 +10,10 @@ import mongoose from "mongoose"
  * Request body:
  * {
  *   code: string,
- *   cartTotal: number
+ *   cartTotal: number,
+ *   userId?: string,
+ *   guestEmail?: string,
+ *   cartItems?: Array<{ bookId, title, price, quantity, category }>
  * }
  */
 export async function POST(request: NextRequest) {
@@ -19,7 +22,7 @@ export async function POST(request: NextRequest) {
     await connectToDatabase()
 
     const body = await request.json()
-    const { code, cartTotal } = body
+    const { code, cartTotal, userId, guestEmail, cartItems } = body
 
     // Validate input
     if (!code || typeof code !== "string") {
@@ -37,7 +40,7 @@ export async function POST(request: NextRequest) {
     }
 
     // Validate the coupon
-    const result = await validateCoupon(code, cartTotal)
+    const result = await validateCoupon(code, cartTotal, userId, guestEmail, cartItems)
 
     return NextResponse.json(
       {

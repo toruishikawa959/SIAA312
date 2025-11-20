@@ -37,6 +37,7 @@ export default function GuestCheckout() {
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
   const [userId, setUserId] = useState<string | null>(null)
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null)
 
   const [formData, setFormData] = useState<GuestCheckoutData>({
     email: "",
@@ -67,6 +68,18 @@ export default function GuestCheckout() {
       return
     }
     setCartItems(items)
+
+    // Load saved coupon
+    const savedCoupon = localStorage.getItem("appliedCoupon")
+    if (savedCoupon) {
+      try {
+        setAppliedCoupon(JSON.parse(savedCoupon))
+      } catch (error) {
+        console.error("Error loading saved coupon:", error)
+        localStorage.removeItem("appliedCoupon")
+      }
+    }
+
     setLoading(false)
   }, [router])
 
@@ -118,6 +131,7 @@ export default function GuestCheckout() {
 
     try {
       // Create order (user or guest)
+      const discount = appliedCoupon?.discount || 0
       const orderPayload: any = {
         items: cartItems.map(item => ({
           bookId: item.bookId,
@@ -125,7 +139,9 @@ export default function GuestCheckout() {
           price: item.price,
         })),
         deliveryMethod: formData.deliveryMethod,
-        total: subtotal + deliveryFee,
+        total: subtotal + deliveryFee - discount,
+        couponCode: appliedCoupon?.coupon?.code,
+        discount,
       }
 
       // If user is logged in, pass userId and shipping address
@@ -172,7 +188,8 @@ export default function GuestCheckout() {
     0
   )
   const deliveryFee = formData.deliveryMethod === "delivery" ? 100 : 0
-  const total = subtotal + deliveryFee
+  const discount = appliedCoupon?.discount || 0
+  const total = subtotal + deliveryFee - discount
 
   if (loading) {
     return (
@@ -472,6 +489,12 @@ export default function GuestCheckout() {
                     <div className="flex justify-between text-gray-600">
                       <span>Delivery Fee</span>
                       <span>{formatPeso(deliveryFee)}</span>
+                    </div>
+                  )}
+                  {appliedCoupon && (
+                    <div className="flex justify-between text-green-600">
+                      <span>Discount ({appliedCoupon.coupon.code})</span>
+                      <span>-{formatPeso(discount)}</span>
                     </div>
                   )}
                 </div>

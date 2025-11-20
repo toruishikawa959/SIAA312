@@ -25,6 +25,10 @@ export default function Cart() {
   const [checkoutLoading, setCheckoutLoading] = useState(false)
   const [stockErrors, setStockErrors] = useState<Record<string, string>>({})
   const [checkoutError, setCheckoutError] = useState<string>("")
+  const [couponCode, setCouponCode] = useState<string>("")
+  const [appliedCoupon, setAppliedCoupon] = useState<any>(null)
+  const [couponError, setCouponError] = useState<string>("")
+  const [couponLoading, setCouponLoading] = useState(false)
 
   useEffect(() => {
     // Check if user is logged in
@@ -34,6 +38,18 @@ export default function Cart() {
     // Load guest cart
     const guestItems = getGuestCart()
     setCartItems(guestItems)
+
+    // Load saved coupon
+    const savedCoupon = localStorage.getItem("appliedCoupon")
+    if (savedCoupon) {
+      try {
+        setAppliedCoupon(JSON.parse(savedCoupon))
+      } catch (error) {
+        console.error("Error loading saved coupon:", error)
+        localStorage.removeItem("appliedCoupon")
+      }
+    }
+
     setLoading(false)
   }, [])
 
@@ -150,8 +166,105 @@ export default function Cart() {
     }
   }
 
+  const handleApplyCoupon = async () => {
+    if (!couponCode.trim()) {
+      setCouponError("Please enter a coupon code")
+      return
+    }
+
+    setCouponLoading(true)
+    setCouponError("")
+
+    try {
+      const userId = localStorage.getItem("userId")
+      const guestEmail = localStorage.getItem("guestEmail")
+
+      const response = await fetch("/api/coupons/validate", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          code: couponCode.trim(),
+          cartTotal: subtotal,
+          userId,
+          guestEmail,
+          cartItems: cartItems.map(item => ({
+            bookId: item.bookId,
+            title: item.title,
+            price: item.price,
+            quantity: item.quantity,
+            category: item.category,
+          })),
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        setAppliedCoupon(data)
+        localStorage.setItem("appliedCoupon", JSON.stringify(data))
+        setCouponCode("")
+      } else {
+        setCouponError(data.error || "Invalid coupon code")
+      }
+    } catch (error) {
+      console.error("Error applying coupon:", error)
+      setCouponError("Failed to apply coupon")
+    } finally {
+      setCouponLoading(false)
+    }
+  }
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null)
+    setCouponCode("")
+    setCouponError("")
+    localStorage.removeItem("appliedCoupon")
+  }
+
+  const handleAutoApplyBest = async () => {
+    setCouponLoading(true)
+    setCouponError("")
+
+    try {
+      const userId = localStorage.getItem("userId")
+      const guestEmail = localStorage.getItem("guestEmail")
+
+      const response = await fetch("/api/coupons/best", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          cartTotal: subtotal,
+          userId,
+          guestEmail,
+          cartItems: cartItems.map(item => ({
+            bookId: item.bookId,
+            title: item.title,
+            price: item.price,
+            quantity: item.quantity,
+            category: item.category,
+          })),
+        }),
+      })
+
+      const data = await response.json()
+
+      if (response.ok && data.success) {
+        setAppliedCoupon(data)
+        localStorage.setItem("appliedCoupon", JSON.stringify(data))
+      } else {
+        setCouponError(data.message || "No applicable coupons found")
+      }
+    } catch (error) {
+      console.error("Error finding best coupon:", error)
+      setCouponError("Failed to find best coupon")
+    } finally {
+      setCouponLoading(false)
+    }
+  }
+
   const subtotal = cartItems.reduce((sum, item) => sum + item.price * item.quantity, 0)
-  const total = subtotal
+  const discount = appliedCoupon?.discount || 0
+  const total = subtotal - discount
 
   if (loading) {
     return (
@@ -327,11 +440,68 @@ export default function Cart() {
                 <div className="lg:col-span-1">
                   <Card className="card-base p-6 sticky top-20">
                     <h2 className="font-serif font-bold text-lg mb-4">Order Summary</h2>
+                    
+                    {/* Coupon Section */}
+                    <div className="mb-4 pb-4 border-b border-gray-200">
+                      {!appliedCoupon ? (
+                        <>
+                          <div className="flex gap-2 mb-2">
+                            <input
+                              type="text"
+                              placeholder="Coupon code"
+                              value={couponCode}
+                              onChange={(e) => setCouponCode(e.target.value.toUpperCase())}
+                              className="flex-1 px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-coral"
+                              disabled={couponLoading}
+                            />
+                            <button
+                              onClick={handleApplyCoupon}
+                              disabled={couponLoading || !couponCode.trim()}
+                              className="px-4 py-2 bg-coral text-white rounded-lg hover:bg-red-600 transition disabled:opacity-50 disabled:cursor-not-allowed"
+                            >
+                              {couponLoading ? "..." : "Apply"}
+                            </button>
+                          </div>
+                          <button
+                            onClick={handleAutoApplyBest}
+                            disabled={couponLoading}
+                            className="text-sm text-coral hover:underline disabled:opacity-50"
+                          >
+                            Auto-apply best coupon
+                          </button>
+                          {couponError && (
+                            <p className="text-sm text-red-600 mt-2">{couponError}</p>
+                          )}
+                        </>
+                      ) : (
+                        <div className="bg-green-50 border border-green-200 rounded-lg p-3">
+                          <div className="flex justify-between items-center">
+                            <div>
+                              <p className="font-semibold text-green-800">{appliedCoupon.coupon.code}</p>
+                              <p className="text-sm text-green-600">-{formatPeso(discount)}</p>
+                            </div>
+                            <button
+                              onClick={handleRemoveCoupon}
+                              className="text-red-600 hover:text-red-800 text-sm"
+                            >
+                              Remove
+                            </button>
+                          </div>
+                        </div>
+                      )}
+                    </div>
+
                     <div className="space-y-3 mb-6 pb-6 border-b border-gray-200">
                       <div className="flex justify-between text-gray-600">
                         <span>Subtotal</span>
                         <span>{formatPeso(subtotal)}</span>
                       </div>
+                      {appliedCoupon && (
+                        <div className="flex justify-between text-green-600">
+                          <span>Discount ({appliedCoupon.coupon.code})</span>
+                          <span>-{formatPeso(discount)}</span>
+                        </div>
+                      )}
                     </div>
                     <div className="flex justify-between mb-6">
                       <span className="font-serif font-bold text-lg">Total</span>
