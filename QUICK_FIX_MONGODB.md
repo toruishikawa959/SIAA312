@@ -94,7 +94,7 @@ DB_NAME=bookstore
 NEXT_PUBLIC_API_URL=http://localhost:3001
 
 # PayMongo Configuration (Test Keys)
-PAYMONGO_SECRET_KEY=sk_test_your_key_here
+PAYMONGO_SECRET_KEY=sk_test_SomZwP7uH91DnDtiyV2eLZY1
 NEXT_PUBLIC_BASE_URL=http://localhost:3001
 
 RESEND_API_KEY=re_SCeeePk5_BPxyepV3u4ELTzVxFMRmEgdD
