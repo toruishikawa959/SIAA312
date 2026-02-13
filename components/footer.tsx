@@ -96,12 +96,13 @@ export function Footer() {
               </div>
               <div className="flex items-center gap-2 text-gray-300">
                 <Phone size={16} />
-                <span>+1 (555) 123-4567</span>
+                <span>+63 998 287 8629</span>
               </div>
               <div className="flex items-center gap-2 text-gray-300">
                 <MapPin size={16} />
-                <span>Portland, Oregon</span>
+                <span>1389 St. Barbara, Caloocan</span>
               </div>
+
             </div>
           </div>
 

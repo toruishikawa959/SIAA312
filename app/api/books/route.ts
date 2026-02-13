@@ -29,7 +29,9 @@ export async function GET(request: NextRequest) {
         ...book,
         active: book.active !== false,
         price: applyProcessingFee(book.price),
+        imageUrl: book.imageUrl || "",
       }
+
 
       return NextResponse.json(bookWithActive, { status: 200 })
     }
@@ -63,7 +65,9 @@ export async function GET(request: NextRequest) {
       ...book,
       active: book.active !== false, // Treat undefined as true
       price: applyProcessingFee(book.price),
+      imageUrl: book.imageUrl || "",
     }))
+
 
     return NextResponse.json({ books: booksWithActive }, { status: 200 })
   } catch (error) {

@@ -21,8 +21,10 @@ export async function POST(request: NextRequest) {
       guestPhone,
       guestAddress,
       deliveryMethod,
+      paymentMethod,
       total,
     } = body
+
 
     // Validate request - either userId or guest details required
     if (!items || items.length === 0) {
@@ -40,6 +42,40 @@ export async function POST(request: NextRequest) {
         { status: 400 }
       )
     }
+
+    // Validate COD payment method restrictions
+    if (paymentMethod === "cod") {
+      // COD is only allowed for delivery (not pickup)
+      if (deliveryMethod === "pickup") {
+        return NextResponse.json(
+          { error: "Cash on Delivery is not available for store pickup orders" },
+          { status: 400 }
+        )
+      }
+
+      // Check if address is in Quezon City
+      const addressToCheck = isGuestOrder ? guestAddress : shippingAddress
+      if (!addressToCheck) {
+        return NextResponse.json(
+          { error: "Delivery address is required for Cash on Delivery" },
+          { status: 400 }
+        )
+      }
+
+      const addressLower = addressToCheck.toLowerCase()
+      const isQuezonCity = addressLower.includes("quezon city") || 
+                           addressLower.includes(", qc") || 
+                           addressLower.includes(" q.c.") ||
+                           addressLower.includes(" qc ")
+
+      if (!isQuezonCity) {
+        return NextResponse.json(
+          { error: "Cash on Delivery is only available for deliveries within Quezon City" },
+          { status: 400 }
+        )
+      }
+    }
+
 
     // User order validation
     if (!isGuestOrder && !userId) {
@@ -101,11 +137,13 @@ export async function POST(request: NextRequest) {
       items: orderItems,
       totalAmount: total || totalAmount,
       status: "pending",
-      paymentStatus: "pending",
+      paymentStatus: paymentMethod === "cod" ? "pending" : "pending",
+      paymentMethod: paymentMethod || "qrph",
       deliveryMethod: deliveryMethod || "delivery",
       createdAt: new Date(),
       updatedAt: new Date(),
     }
+
 
     // Add guest or user details
     if (isGuestOrder) {

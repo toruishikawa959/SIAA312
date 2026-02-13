@@ -6,7 +6,7 @@ import { Navigation } from "@/components/navigation"
 import { Footer } from "@/components/footer"
 import { Button } from "@/components/ui/button"
 import { Card } from "@/components/ui/card"
-import { ShoppingBag, Trash2, ArrowRight, AlertCircle, LogIn } from "lucide-react"
+import { ShoppingBag, Trash2, ArrowRight, AlertCircle } from "lucide-react"
 import Link from "next/link"
 import { formatPeso } from "@/lib/currency"
 import {
@@ -33,11 +33,18 @@ export default function Cart() {
   useEffect(() => {
     // Check if user is logged in
     const userId = localStorage.getItem("userId")
-    setIsLoggedIn(!!userId)
+    const hasUser = !!userId
+    setIsLoggedIn(hasUser)
 
-    // Load guest cart
-    const guestItems = getGuestCart()
-    setCartItems(guestItems)
+    if (hasUser) {
+      // Only load cart for logged in users
+      const guestItems = getGuestCart()
+      setCartItems(guestItems)
+    } else {
+      // Clear guest cart for non-logged in users
+      clearGuestCart()
+      setCartItems([])
+    }
 
     // Load saved coupon
     const savedCoupon = localStorage.getItem("appliedCoupon")
@@ -192,7 +199,6 @@ export default function Cart() {
             title: item.title,
             price: item.price,
             quantity: item.quantity,
-            category: item.category,
           })),
         }),
       })
@@ -241,7 +247,6 @@ export default function Cart() {
             title: item.title,
             price: item.price,
             quantity: item.quantity,
-            category: item.category,
           })),
         }),
       })
@@ -330,7 +335,21 @@ export default function Cart() {
           <div className="max-w-7xl mx-auto">
             <h1 className="font-serif text-4xl font-bold mb-8">Shopping Cart</h1>
 
-            {cartItems.length === 0 ? (
+            {!isLoggedIn ? (
+              <div className="text-center py-16">
+                <ShoppingBag size={64} className="mx-auto text-gray-400 mb-4" />
+                <p className="text-gray-600 text-lg mb-4">Please sign in to view your cart</p>
+                <p className="text-gray-500 text-sm mb-6">Cart items are only available for logged-in users</p>
+                <div className="flex gap-4 justify-center">
+                  <Link href="/login">
+                    <Button className="btn-primary">Sign In</Button>
+                  </Link>
+                  <Link href="/catalog">
+                    <Button className="btn-outline">Browse Catalog</Button>
+                  </Link>
+                </div>
+              </div>
+            ) : cartItems.length === 0 ? (
               <div className="text-center py-16">
                 <ShoppingBag size={64} className="mx-auto text-gray-400 mb-4" />
                 <p className="text-gray-600 text-lg mb-6">Your cart is empty</p>
@@ -349,30 +368,6 @@ export default function Cart() {
                         <div className="flex-1">
                           <h3 className="font-semibold text-red-900 mb-1">Checkout Error</h3>
                           <p className="text-red-800 text-sm">{checkoutError}</p>
-                        </div>
-                      </div>
-                    </Card>
-                  )}
-
-                  {!isLoggedIn && (
-                    <Card className="card-base p-4 bg-blue-50 border-l-4 border-blue-500">
-                      <div className="flex items-start gap-3">
-                        <AlertCircle className="text-blue-600 flex-shrink-0 mt-0.5" size={20} />
-                        <div className="flex-1">
-                          <h3 className="font-semibold text-blue-900 mb-1">Guest Checkout</h3>
-                          <p className="text-blue-800 text-sm mb-3">
-                            Sign in to merge your cart with your account. Your items will be saved!
-                          </p>
-                          <div className="flex gap-2">
-                            <Link href="/login">
-                              <Button className="btn-secondary text-sm py-2 px-4">
-                                <LogIn size={16} className="mr-2" /> Sign In
-                              </Button>
-                            </Link>
-                            <Link href="/signup">
-                              <Button className="btn-outline text-sm py-2 px-4">Create Account</Button>
-                            </Link>
-                          </div>
                         </div>
                       </div>
                     </Card>

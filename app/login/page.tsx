@@ -155,7 +155,12 @@ export default function LoginPage() {
               </div>
 
               <div className="space-y-2">
-                <label className="text-sm font-medium text-gray-300">Password</label>
+                <div className="flex items-center justify-between">
+                  <label className="text-sm font-medium text-gray-300">Password</label>
+                  <Link href="/forgot-password" className="text-sm text-gold hover:text-gold/80">
+                    Forgot Password?
+                  </Link>
+                </div>
                 <Input
                   type="password"
                   placeholder="••••••••"
@@ -165,6 +170,7 @@ export default function LoginPage() {
                   disabled={isLoading}
                 />
               </div>
+
 
               <Button
                 type="submit"
@@ -182,30 +188,8 @@ export default function LoginPage() {
               </Button>
             </form>
 
-            <div className="mt-6 space-y-4">
-              <div className="relative">
-                <div className="absolute inset-0 flex items-center">
-                  <div className="w-full border-t border-gray-600"></div>
-                </div>
-                <div className="relative flex justify-center text-sm">
-                  <span className="px-2 bg-gray-800 text-gray-400">Demo Credentials</span>
-                </div>
-              </div>
-
-              <div className="space-y-2 text-sm text-gray-400">
-                <p>
-                  <strong className="text-gold">Customer:</strong> customer@example.com / password123
-                </p>
-                <p>
-                  <strong className="text-gold">Staff:</strong> staff@example.com / password123
-                </p>
-                <p>
-                  <strong className="text-gold">Admin:</strong> admin@example.com / password123
-                </p>
-              </div>
-            </div>
-
             <div className="mt-6 text-center text-sm text-gray-400">
+
               Don't have an account?{" "}
               <Link href="/signup" className="text-gold hover:text-gold/80 font-semibold">
                 Sign Up

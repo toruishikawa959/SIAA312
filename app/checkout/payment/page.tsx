@@ -13,7 +13,10 @@ import {
   CreditCard,
   Clock,
   ChevronRight,
+  Banknote,
+  Package,
 } from "lucide-react"
+
 import { formatPeso } from "@/lib/currency"
 
 interface OrderData {
@@ -26,6 +29,7 @@ interface OrderData {
   totalAmount: number
   status: string
   paymentStatus: string
+  paymentMethod?: "qrph" | "card" | "transfer" | "cod"
   deliveryMethod: string
   shippingAddress: string
   guestEmail?: string
@@ -33,6 +37,7 @@ interface OrderData {
   guestPhone?: string
   createdAt: string
 }
+
 
 function PaymentContent() {
   const router = useRouter()
@@ -45,6 +50,10 @@ function PaymentContent() {
   const [paymentInitiated, setPaymentInitiated] = useState(false)
   const [qrCode, setQrCode] = useState("")
   const [paymentStatus, setPaymentStatus] = useState<"pending" | "processing" | "success" | "failed">("pending")
+
+  // Check if order is COD
+  const isCodOrder = order?.paymentMethod === "cod"
+
 
   useEffect(() => {
     if (!orderId) {
@@ -75,8 +84,16 @@ function PaymentContent() {
   const handleInitiatePayment = async () => {
     if (!orderId) return
 
+    // If COD, skip payment initiation and mark as success
+    if (isCodOrder) {
+      setPaymentInitiated(true)
+      setPaymentStatus("success")
+      return
+    }
+
     setPaymentInitiated(true)
     setPaymentStatus("processing")
+
 
     try {
       const response = await fetch("/api/payment", {
@@ -220,24 +237,61 @@ function PaymentContent() {
             {/* Payment Method Section */}
             {!paymentInitiated ? (
               <Card className="card-base p-6 border-2 border-gold">
-                <div className="mb-6">
-                  <div className="flex items-center gap-3 mb-2">
-                    <CreditCard className="text-gold" size={24} />
-                    <h2 className="font-serif font-bold text-lg">QR Payment via PayMongo</h2>
-                  </div>
-                  <p className="text-gray-600 text-sm">
-                    Click below to generate your payment QR code. Scan it with any mobile payment app to complete your purchase.
-                  </p>
-                </div>
+                {isCodOrder ? (
+                  <>
+                    <div className="mb-6">
+                      <div className="flex items-center gap-3 mb-2">
+                        <Banknote className="text-gold" size={24} />
+                        <h2 className="font-serif font-bold text-lg">Cash on Delivery</h2>
+                      </div>
+                      <p className="text-gray-600 text-sm">
+                        You have selected Cash on Delivery. Your order will be prepared and delivered to your address. Please have the exact amount ready when your order arrives.
+                      </p>
+                    </div>
 
-                <Button
-                  onClick={handleInitiatePayment}
-                  className="btn-secondary w-full py-4 text-lg rounded-full flex items-center justify-center gap-2"
-                >
-                  Generate Payment QR Code
-                  <ChevronRight size={20} />
-                </Button>
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 mb-6">
+                      <div className="flex gap-2">
+                        <Package className="text-amber-600 flex-shrink-0" size={20} />
+                        <div>
+                          <p className="font-semibold text-amber-900">Order Confirmation</p>
+                          <p className="text-sm text-amber-700">
+                            Your order will be processed and delivered to your Quezon City address. Payment will be collected upon delivery.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <Button
+                      onClick={handleInitiatePayment}
+                      className="btn-secondary w-full py-4 text-lg rounded-full flex items-center justify-center gap-2"
+                    >
+                      Confirm COD Order
+                      <CheckCircle size={20} />
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <div className="mb-6">
+                      <div className="flex items-center gap-3 mb-2">
+                        <CreditCard className="text-gold" size={24} />
+                        <h2 className="font-serif font-bold text-lg">QR Payment via PayMongo</h2>
+                      </div>
+                      <p className="text-gray-600 text-sm">
+                        Click below to generate your payment QR code. Scan it with any mobile payment app to complete your purchase.
+                      </p>
+                    </div>
+
+                    <Button
+                      onClick={handleInitiatePayment}
+                      className="btn-secondary w-full py-4 text-lg rounded-full flex items-center justify-center gap-2"
+                    >
+                      Generate Payment QR Code
+                      <ChevronRight size={20} />
+                    </Button>
+                  </>
+                )}
               </Card>
+
             ) : paymentStatus === "processing" ? (
               <Card className="card-base p-8 bg-blue-50 border-2 border-blue-200">
                 <div className="flex flex-col items-center gap-4">
@@ -245,40 +299,90 @@ function PaymentContent() {
                   <p className="font-semibold text-blue-900">Generating QR Code...</p>
                 </div>
               </Card>
-            ) : paymentStatus === "success" && qrCode ? (
-              <Card className="card-base p-8">
-                <div className="text-center space-y-6">
-                  <div>
-                    <p className="text-gray-600 mb-3">Scan this QR code to pay</p>
-                    <div className="flex justify-center bg-white p-4 rounded-lg border-2 border-gray-200">
-                      <img
-                        src={qrCode}
-                        alt="Payment QR Code"
-                        className="w-64 h-64 object-contain"
-                      />
-                    </div>
-                  </div>
-
-                  <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm">
-                    <div className="flex gap-2">
-                      <Clock className="text-amber-600 flex-shrink-0" size={20} />
-                      <div className="text-left">
-                        <p className="font-semibold text-amber-900">Payment will be verified shortly</p>
-                        <p className="text-amber-700 text-xs">
-                          Please wait after scanning the QR code. You will be redirected once payment is confirmed.
-                        </p>
+            ) : paymentStatus === "success" ? (
+              isCodOrder ? (
+                <Card className="card-base p-8 bg-green-50 border-2 border-green-200">
+                  <div className="text-center space-y-6">
+                    <div className="flex justify-center">
+                      <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center">
+                        <CheckCircle className="text-green-600" size={40} />
                       </div>
                     </div>
-                  </div>
+                    
+                    <div>
+                      <h3 className="font-serif font-bold text-2xl text-green-900 mb-2">
+                        Order Confirmed!
+                      </h3>
+                      <p className="text-green-700">
+                        Your Cash on Delivery order has been placed successfully.
+                      </p>
+                    </div>
 
-                  <div className="text-center">
-                    <p className="text-gray-600">Amount to Pay</p>
-                    <p className="font-serif font-bold text-3xl text-coral mt-2">
-                      {formatPeso(order.totalAmount)}
-                    </p>
+                    <div className="bg-white border border-green-200 rounded-lg p-4 text-left">
+                      <div className="flex items-start gap-3">
+                        <Package className="text-green-600 flex-shrink-0" size={20} />
+                        <div>
+                          <p className="font-semibold text-gray-900">What happens next?</p>
+                          <ul className="text-sm text-gray-600 mt-2 space-y-1">
+                            <li>• We'll prepare your order for delivery</li>
+                            <li>• You'll receive a confirmation call</li>
+                            <li>• Pay ₱{order.totalAmount.toLocaleString()} when your order arrives</li>
+                          </ul>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="text-center pt-4">
+                      <p className="text-gray-600">Amount to pay on delivery</p>
+                      <p className="font-serif font-bold text-3xl text-coral mt-2">
+                        {formatPeso(order.totalAmount)}
+                      </p>
+                    </div>
+
+                    <Button
+                      onClick={() => router.push(`/checkout/success?orderId=${orderId}`)}
+                      className="btn-secondary w-full py-3 rounded-full"
+                    >
+                      View Order Details
+                    </Button>
                   </div>
-                </div>
-              </Card>
+                </Card>
+              ) : qrCode ? (
+                <Card className="card-base p-8">
+                  <div className="text-center space-y-6">
+                    <div>
+                      <p className="text-gray-600 mb-3">Scan this QR code to pay</p>
+                      <div className="flex justify-center bg-white p-4 rounded-lg border-2 border-gray-200">
+                        <img
+                          src={qrCode}
+                          alt="Payment QR Code"
+                          className="w-64 h-64 object-contain"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="bg-amber-50 border border-amber-200 rounded-lg p-4 text-sm">
+                      <div className="flex gap-2">
+                        <Clock className="text-amber-600 flex-shrink-0" size={20} />
+                        <div className="text-left">
+                          <p className="font-semibold text-amber-900">Payment will be verified shortly</p>
+                          <p className="text-amber-700 text-xs">
+                            Please wait after scanning the QR code. You will be redirected once payment is confirmed.
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="text-center">
+                      <p className="text-gray-600">Amount to Pay</p>
+                      <p className="font-serif font-bold text-3xl text-coral mt-2">
+                        {formatPeso(order.totalAmount)}
+                      </p>
+                    </div>
+                  </div>
+                </Card>
+              ) : null
+
             ) : (
               <Card className="card-base p-6 bg-red-50 border-l-4 border-red-500">
                 <div className="flex gap-3">

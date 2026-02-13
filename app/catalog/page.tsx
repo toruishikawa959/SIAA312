@@ -19,9 +19,28 @@ interface Book {
   price: number
   stock: number
   image?: string
+  imageUrl?: string
   description?: string
   active?: boolean
 }
+
+// Helper function to get the best available image URL
+function getBookImageUrl(book: Book): string {
+  // Priority: 1) base64 image, 2) imageUrl, 3) placeholder
+  if (book.image && book.image.startsWith('data:image')) {
+    return book.image
+  }
+  if (book.imageUrl && book.imageUrl.trim() !== '') {
+    // If it's already an absolute URL, use it directly
+    if (book.imageUrl.startsWith('http')) {
+      return book.imageUrl
+    }
+    // If it's a relative path, ensure it starts with /
+    return book.imageUrl.startsWith('/') ? book.imageUrl : `/${book.imageUrl}`
+  }
+  return "/placeholder.svg"
+}
+
 
 export default function Catalog() {
   const [searchTerm, setSearchTerm] = useState("")
@@ -130,14 +149,16 @@ export default function Catalog() {
                           </div>
                         ) : (
                           <img
-                            src={book.image || "/placeholder.svg"}
+                            src={getBookImageUrl(book)}
                             alt={book.title}
-                            className="w-full h-full object-cover"
+                            className="w-full h-full object-cover transition-transform duration-300 hover:scale-105"
                             loading="lazy"
                             onError={() => {
+                              console.warn(`Failed to load image for book: ${book.title} (ID: ${book._id})`)
                               setImageErrors(prev => new Set([...prev, book._id]))
                             }}
                           />
+
                         )}
                         {book.stock === 0 && (
                           <div className="absolute inset-0 bg-black/50 flex items-center justify-center">

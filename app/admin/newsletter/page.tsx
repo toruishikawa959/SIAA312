@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { AdminNavigation } from "@/components/admin-navigation"
+import { AdminSidebar } from "@/components/admin-sidebar"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Mail, Trash2, ToggleLeft, ToggleRight, Search, Download, Users, UserCheck, UserX, Send } from "lucide-react"
@@ -188,9 +188,9 @@ export default function AdminNewsletterPage() {
 
   if (loading) {
     return (
-      <>
-        <AdminNavigation userType="admin" />
-        <main className="min-h-screen bg-gray-50 p-8">
+      <div className="flex min-h-screen bg-gray-50">
+        <AdminSidebar />
+        <main className="flex-1 md:ml-64 p-8">
           <div className="max-w-7xl mx-auto">
             <div className="h-10 bg-gray-200 rounded w-64 mb-8 animate-pulse"></div>
             <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
@@ -207,15 +207,15 @@ export default function AdminNewsletterPage() {
             </Card>
           </div>
         </main>
-      </>
+      </div>
     )
   }
 
   return (
-    <>
-      <AdminNavigation userType="admin" />
+    <div className="flex min-h-screen bg-gray-50">
+      <AdminSidebar />
 
-      <main className="min-h-screen bg-gray-50 p-8">
+      <main className="flex-1 md:ml-64 p-8">
         <div className="max-w-7xl mx-auto">
           {/* Header */}
           <div className="flex justify-between items-center mb-8">
@@ -551,6 +551,6 @@ export default function AdminNewsletterPage() {
           </Card>
         </div>
       )}
-    </>
+    </div>
   )
 }

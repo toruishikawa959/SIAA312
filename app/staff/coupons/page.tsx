@@ -1,8 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { Navigation } from "@/components/navigation"
-import { Footer } from "@/components/footer"
+import { StaffSidebar } from "@/components/staff-sidebar"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -114,9 +113,9 @@ export default function StaffCouponsPage() {
 
   if (loading) {
     return (
-      <>
-        <Navigation />
-        <main className="min-h-screen bg-off-white pt-20">
+      <div className="flex min-h-screen bg-off-white">
+        <StaffSidebar />
+        <main className="flex-1 md:ml-64">
           <div className="max-w-7xl mx-auto px-4 py-8">
             <div className="animate-pulse space-y-4">
               <div className="h-8 bg-gray-300 rounded w-48"></div>
@@ -128,15 +127,14 @@ export default function StaffCouponsPage() {
             </div>
           </div>
         </main>
-        <Footer />
-      </>
+      </div>
     )
   }
 
   return (
-    <>
-      <Navigation />
-      <main className="min-h-screen bg-off-white pt-20">
+    <div className="flex min-h-screen bg-off-white">
+      <StaffSidebar />
+      <main className="flex-1 md:ml-64">
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="flex justify-between items-center mb-8">
             <div>
@@ -318,7 +316,6 @@ export default function StaffCouponsPage() {
           </Card>
         </div>
       </main>
-      <Footer />
-    </>
+    </div>
   )
 }

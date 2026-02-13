@@ -1,7 +1,5 @@
 import { NextRequest, NextResponse } from "next/server"
 import { connectToDatabase } from "@/lib/db"
-import Coupon from "@/lib/models/Coupon"
-import mongoose from "mongoose"
 
 /**
  * GET /api/admin/coupons
@@ -9,7 +7,7 @@ import mongoose from "mongoose"
  */
 export async function GET(request: NextRequest) {
   try {
-    await connectToDatabase()
+    const { db } = await connectToDatabase()
 
     const { searchParams } = new URL(request.url)
     const isActive = searchParams.get("isActive")
@@ -21,7 +19,7 @@ export async function GET(request: NextRequest) {
       query.isActive = isActive === "true"
     }
 
-    const coupons = await Coupon.find(query).sort({ createdAt: -1 })
+    const coupons = await db.collection("coupons").find(query).sort({ createdAt: -1 }).toArray()
 
     return NextResponse.json(
       {
@@ -45,7 +43,7 @@ export async function GET(request: NextRequest) {
  */
 export async function POST(request: NextRequest) {
   try {
-    await connectToDatabase()
+    const { db } = await connectToDatabase()
 
     const body = await request.json()
     const {
@@ -69,42 +67,44 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Check if code already exists
+    const existing = await db.collection("coupons").findOne({ code: code.trim().toUpperCase() })
+    if (existing) {
+      return NextResponse.json(
+        { error: "Coupon code already exists" },
+        { status: 400 }
+      )
+    }
+
     // Create new coupon
-    const newCoupon = new Coupon({
+    const newCoupon = {
       code: code.trim().toUpperCase(),
       discountType,
       discountAmount,
       minPurchaseAmount: minPurchaseAmount || 0,
       expirationDate: new Date(expirationDate),
       isActive: isActive !== undefined ? isActive : true,
-      maxUses: maxUses || undefined,
-      applicableCategories: applicableCategories || undefined,
-      maxUsesPerUser: maxUsesPerUser || undefined,
+      maxUses: maxUses || null,
+      applicableCategories: applicableCategories || null,
+      maxUsesPerUser: maxUsesPerUser || null,
       isFirstTimeCustomerOnly: isFirstTimeCustomerOnly || false,
       usedCount: 0,
-    })
+      createdAt: new Date(),
+      updatedAt: new Date(),
+    }
 
-    await newCoupon.save()
+    const result = await db.collection("coupons").insertOne(newCoupon)
 
     return NextResponse.json(
       {
         success: true,
         message: "Coupon created successfully",
-        coupon: newCoupon,
+        coupon: { ...newCoupon, _id: result.insertedId },
       },
       { status: 201 }
     )
   } catch (error) {
     console.error("[Admin Coupons] POST Error:", error)
-
-    // Handle duplicate code error
-    if (error instanceof Error && error.message.includes("duplicate key")) {
-      return NextResponse.json(
-        { error: "A coupon with this code already exists" },
-        { status: 409 }
-      )
-    }
-
     return NextResponse.json(
       { error: "Failed to create coupon" },
       { status: 500 }

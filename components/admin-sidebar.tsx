@@ -3,7 +3,7 @@
 import { useState, useEffect } from "react"
 import Link from "next/link"
 import { useRouter, usePathname } from "next/navigation"
-import { BookOpen, Package, ShoppingCart, BarChart3, Settings, LogOut, Menu, X, Home, Loader, Users, Mail } from "lucide-react"
+import { BookOpen, Package, ShoppingCart, BarChart3, Settings, LogOut, Menu, X, Home, Loader, Users, Mail, Tag } from "lucide-react"
 
 interface UserSession {
   email: string
@@ -42,6 +42,7 @@ export function AdminSidebar() {
     { href: "/admin/orders", label: "Orders", icon: ShoppingCart },
     { href: "/admin/inventory", label: "Inventory", icon: Package },
     { href: "/admin/users", label: "Users", icon: Users },
+    { href: "/admin/coupons", label: "Coupons", icon: Tag },
     { href: "/admin/newsletter", label: "Newsletter", icon: Mail },
   ]
 

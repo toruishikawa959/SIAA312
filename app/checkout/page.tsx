@@ -17,7 +17,10 @@ import {
   AlertCircle,
   CheckCircle,
   CreditCard,
+  Banknote,
+  Info,
 } from "lucide-react"
+
 
 interface GuestCheckoutData {
   email: string
@@ -27,7 +30,9 @@ interface GuestCheckoutData {
   city: string
   postalCode: string
   deliveryMethod: "pickup" | "delivery"
+  paymentMethod: "qrph" | "cod"
 }
+
 
 export default function GuestCheckout() {
   const router = useRouter()
@@ -47,7 +52,9 @@ export default function GuestCheckout() {
     city: "",
     postalCode: "",
     deliveryMethod: "delivery",
+    paymentMethod: "qrph",
   })
+
 
   useEffect(() => {
     // Check if user is logged in
@@ -98,6 +105,27 @@ export default function GuestCheckout() {
     }))
   }
 
+  const handlePaymentMethodChange = (method: "qrph" | "cod") => {
+    setFormData(prev => ({
+      ...prev,
+      paymentMethod: method,
+    }))
+  }
+
+  // Check if the delivery address is in Quezon City
+  const isQuezonCity = (): boolean => {
+    const city = formData.city.trim().toLowerCase()
+    // Check for various common spellings/variants of Quezon City
+    return city.includes("quezon city") || city === "qc" || city === "q.c."
+  }
+
+  // Check if COD is available for current address
+  const isCodAvailable = (): boolean => {
+    // COD is only available for delivery to Quezon City
+    return formData.deliveryMethod === "delivery" && isQuezonCity()
+  }
+
+
   const validateForm = (): boolean => {
     if (!formData.email || !formData.fullName || !formData.phone) {
       setError("Please fill in all required fields")
@@ -116,8 +144,15 @@ export default function GuestCheckout() {
       }
     }
 
+    // Validate COD is only for Quezon City
+    if (formData.paymentMethod === "cod" && !isCodAvailable()) {
+      setError("Cash on Delivery is only available for Quezon City deliveries. Please select a different payment method or change your delivery address.")
+      return false
+    }
+
     return true
   }
+
 
   const handleCheckout = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -139,10 +174,12 @@ export default function GuestCheckout() {
           price: item.price,
         })),
         deliveryMethod: formData.deliveryMethod,
+        paymentMethod: formData.paymentMethod,
         total: subtotal + deliveryFee - discount,
         couponCode: appliedCoupon?.coupon?.code,
         discount,
       }
+
 
       // If user is logged in, pass userId and shipping address
       if (userId) {
@@ -437,16 +474,92 @@ export default function GuestCheckout() {
                 {/* Payment Method */}
                 <Card className="card-base p-6">
                   <h2 className="font-serif font-bold text-xl mb-4">Payment Method</h2>
-                  <div className="p-4 border-2 border-gold bg-cream rounded-lg flex items-center gap-3">
-                    <CreditCard size={24} className="text-gold" />
-                    <div>
+                  
+                  {/* QR Payment Option */}
+                  <button
+                    type="button"
+                    onClick={() => handlePaymentMethodChange("qrph")}
+                    className={`w-full p-4 border-2 rounded-lg transition flex items-center gap-3 mb-3 ${
+                      formData.paymentMethod === "qrph"
+                        ? "border-gold bg-cream"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <CreditCard
+                      size={24}
+                      className={
+                        formData.paymentMethod === "qrph"
+                          ? "text-gold"
+                          : "text-gray-400"
+                      }
+                    />
+                    <div className="text-left">
                       <p className="font-semibold">QR Payment (PayMongo)</p>
                       <p className="text-sm text-gray-600">
                         Pay securely using QR code on the next page
                       </p>
                     </div>
-                  </div>
+                  </button>
+
+                  {/* COD Option */}
+                  <button
+                    type="button"
+                    onClick={() => handlePaymentMethodChange("cod")}
+                    disabled={!isCodAvailable()}
+                    className={`w-full p-4 border-2 rounded-lg transition flex items-center gap-3 ${
+                      formData.paymentMethod === "cod"
+                        ? "border-gold bg-cream"
+                        : !isCodAvailable()
+                        ? "border-gray-100 bg-gray-50 cursor-not-allowed opacity-60"
+                        : "border-gray-200 hover:border-gray-300"
+                    }`}
+                  >
+                    <Banknote
+                      size={24}
+                      className={
+                        formData.paymentMethod === "cod"
+                          ? "text-gold"
+                          : !isCodAvailable()
+                          ? "text-gray-300"
+                          : "text-gray-400"
+                      }
+                    />
+                    <div className="text-left flex-1">
+                      <p className={`font-semibold ${!isCodAvailable() ? "text-gray-400" : ""}`}>
+                        Cash on Delivery
+                      </p>
+                      <p className="text-sm text-gray-600">
+                        Pay when you receive your order
+                      </p>
+                    </div>
+                    {!isCodAvailable() && (
+                      <span className="text-xs text-amber-600 bg-amber-50 px-2 py-1 rounded">
+                        Quezon City only
+                      </span>
+                    )}
+                  </button>
+
+                  {/* COD Availability Message */}
+                  {formData.deliveryMethod === "delivery" && !isQuezonCity() && (
+                    <div className="mt-3 p-3 bg-amber-50 border border-amber-200 rounded-lg flex items-start gap-2">
+                      <Info size={16} className="text-amber-600 flex-shrink-0 mt-0.5" />
+                      <p className="text-sm text-amber-800">
+                        Cash on Delivery is only available for deliveries within Quezon City. 
+                        Please enter "Quezon City" as your city to enable this option.
+                      </p>
+                    </div>
+                  )}
+
+                  {formData.deliveryMethod === "delivery" && isQuezonCity() && (
+                    <div className="mt-3 p-3 bg-green-50 border border-green-200 rounded-lg flex items-start gap-2">
+                      <CheckCircle size={16} className="text-green-600 flex-shrink-0 mt-0.5" />
+                      <p className="text-sm text-green-800">
+                        Great! Cash on Delivery is available for your Quezon City address.
+                      </p>
+                    </div>
+                  )}
                 </Card>
+
 
                 {/* Submit Button */}
                 <Button
@@ -457,8 +570,13 @@ export default function GuestCheckout() {
                   {submitting && (
                     <div className="animate-spin rounded-full h-5 w-5 border-2 border-white border-t-transparent"></div>
                   )}
-                  {submitting ? "Creating Order..." : "Proceed to Payment"}
+                  {submitting 
+                    ? "Creating Order..." 
+                    : formData.paymentMethod === "cod" 
+                      ? "Place Order (Cash on Delivery)" 
+                      : "Proceed to Payment"}
                 </Button>
+
               </form>
             </div>
 

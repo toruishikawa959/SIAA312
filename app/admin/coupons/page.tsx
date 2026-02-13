@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { AdminNavigation } from "@/components/admin-navigation"
+import { AdminSidebar } from "@/components/admin-sidebar"
 import { Card } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -32,6 +32,8 @@ export default function AdminCouponsPage() {
   const [filterActive, setFilterActive] = useState<string>("all")
   const [showModal, setShowModal] = useState(false)
   const [editingCoupon, setEditingCoupon] = useState<Coupon | null>(null)
+  const [categories, setCategories] = useState<string[]>([])
+  const [selectedCategories, setSelectedCategories] = useState<string[]>([])
   const [formData, setFormData] = useState({
     code: "",
     discountType: "PERCENTAGE" as "PERCENTAGE" | "FIXED",
@@ -47,6 +49,7 @@ export default function AdminCouponsPage() {
 
   useEffect(() => {
     fetchCoupons()
+    fetchCategories()
   }, [])
 
   const fetchCoupons = async () => {
@@ -63,6 +66,20 @@ export default function AdminCouponsPage() {
     }
   }
 
+  const fetchCategories = async () => {
+    try {
+      const res = await fetch("/api/books")
+      const data = await res.json()
+      if (data.success && data.books) {
+        // Extract unique categories from books
+        const uniqueCategories = [...new Set(data.books.map((book: any) => book.category).filter(Boolean))] as string[]
+        setCategories(uniqueCategories.sort())
+      }
+    } catch (error) {
+      console.error("Error fetching categories:", error)
+    }
+  }
+
   const handleCreateOrUpdate = async (e: React.FormEvent) => {
     e.preventDefault()
 
@@ -70,9 +87,7 @@ export default function AdminCouponsPage() {
       ...formData,
       maxUses: formData.maxUses ? Number(formData.maxUses) : undefined,
       maxUsesPerUser: formData.maxUsesPerUser ? Number(formData.maxUsesPerUser) : undefined,
-      applicableCategories: formData.applicableCategories 
-        ? formData.applicableCategories.split(",").map(c => c.trim()).filter(Boolean)
-        : undefined,
+      applicableCategories: selectedCategories.length > 0 ? selectedCategories : undefined,
     }
 
     try {
@@ -123,6 +138,7 @@ export default function AdminCouponsPage() {
 
   const handleEdit = (coupon: Coupon) => {
     setEditingCoupon(coupon)
+    setSelectedCategories(coupon.applicableCategories || [])
     setFormData({
       code: coupon.code,
       discountType: coupon.discountType,
@@ -139,6 +155,7 @@ export default function AdminCouponsPage() {
   }
 
   const resetForm = () => {
+    setSelectedCategories([])
     setFormData({
       code: "",
       discountType: "PERCENTAGE",
@@ -170,9 +187,9 @@ export default function AdminCouponsPage() {
 
   if (loading) {
     return (
-      <>
-        <AdminNavigation />
-        <main className="min-h-screen bg-off-white pt-20">
+      <div className="flex min-h-screen bg-off-white">
+        <AdminSidebar />
+        <main className="flex-1 md:ml-64">
           <div className="max-w-7xl mx-auto px-4 py-8">
             <div className="animate-pulse space-y-4">
               <div className="h-8 bg-gray-300 rounded w-48"></div>
@@ -184,14 +201,14 @@ export default function AdminCouponsPage() {
             </div>
           </div>
         </main>
-      </>
+      </div>
     )
   }
 
   return (
-    <>
-      <AdminNavigation />
-      <main className="min-h-screen bg-off-white pt-20">
+    <div className="flex min-h-screen bg-off-white">
+      <AdminSidebar />
+      <main className="flex-1 md:ml-64">
         <div className="max-w-7xl mx-auto px-4 py-8">
           <div className="flex justify-between items-center mb-8">
             <h1 className="font-serif font-bold text-3xl">Coupon Management</h1>
@@ -445,12 +462,41 @@ export default function AdminCouponsPage() {
                 </div>
 
                 <div>
-                  <label className="block text-sm font-semibold mb-2">Applicable Categories (comma-separated, optional)</label>
-                  <Input
-                    value={formData.applicableCategories}
-                    onChange={(e) => setFormData({ ...formData, applicableCategories: e.target.value })}
-                    placeholder="Fiction, Non-Fiction, Science"
-                  />
+                  <label className="block text-sm font-semibold mb-2">Applicable Categories (optional)</label>
+                  <div className="border rounded-lg p-3 bg-white max-h-48 overflow-y-auto">
+                    {categories.length > 0 ? (
+                      <div className="space-y-2">
+                        {categories.map((category) => (
+                          <label key={category} className="flex items-center gap-2 cursor-pointer hover:bg-gray-50 p-2 rounded">
+                            <input
+                              type="checkbox"
+                              checked={selectedCategories.includes(category)}
+                              onChange={(e) => {
+                                if (e.target.checked) {
+                                  setSelectedCategories([...selectedCategories, category])
+                                } else {
+                                  setSelectedCategories(selectedCategories.filter(c => c !== category))
+                                }
+                              }}
+                              className="w-4 h-4 text-coral focus:ring-coral border-gray-300 rounded"
+                            />
+                            <span className="text-sm">{category}</span>
+                          </label>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-sm text-gray-500">No categories available</p>
+                    )}
+                  </div>
+                  {selectedCategories.length > 0 && (
+                    <div className="mt-2 flex flex-wrap gap-2">
+                      {selectedCategories.map((cat) => (
+                        <span key={cat} className="bg-coral/10 text-coral px-3 py-1 rounded-full text-sm font-medium">
+                          {cat}
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
 
                 <div className="flex items-center gap-4">
@@ -492,6 +538,6 @@ export default function AdminCouponsPage() {
           </div>
         )}
       </main>
-    </>
+    </div>
   )
 }

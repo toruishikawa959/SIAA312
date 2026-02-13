@@ -5,6 +5,8 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { ShoppingCart, Menu, X, User, LogOut, Loader } from "lucide-react"
 import { BookOpen } from "lucide-react"
+import { getGuestCartCount, clearGuestCart } from "@/lib/guest-cart"
+
 
 interface UserSession {
   email: string
@@ -15,8 +17,9 @@ interface UserSession {
 export function Navigation() {
   const router = useRouter()
   const [isOpen, setIsOpen] = useState(false)
-  const [cartCount] = useState(0)
+  const [cartCount, setCartCount] = useState(0)
   const [isLoggedIn, setIsLoggedIn] = useState(false)
+
   const [user, setUser] = useState<UserSession | null>(null)
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [mounted, setMounted] = useState(false)
@@ -29,20 +32,28 @@ export function Navigation() {
       const userData = JSON.parse(storedUser)
       setUser(userData)
       setIsLoggedIn(true)
+      // Load cart count for logged in user
+      const count = getGuestCartCount()
+      setCartCount(count)
     }
   }, [])
+
 
   const handleLogout = async () => {
     setIsLoggingOut(true)
     // Simulate logout process
     await new Promise(resolve => setTimeout(resolve, 500))
     localStorage.removeItem("user")
+    localStorage.removeItem("userId")
+    clearGuestCart() // Clear guest cart on logout
     setUser(null)
     setIsLoggedIn(false)
     setShowUserMenu(false)
+    setCartCount(0) // Reset cart count
     setIsLoggingOut(false)
     router.push("/")
   }
+
 
   return (
     <nav className="sticky top-0 z-50 bg-charcoal text-white h-16 flex items-center px-4 md:px-8 shadow-lg">
@@ -88,15 +99,17 @@ export function Navigation() {
 
         {/* Right Section */}
         <div className="flex items-center gap-4">
-          {/* Cart Icon */}
+          {/* Cart Icon - Only show badge when logged in */}
           <Link href="/cart" className="relative hover:text-gold transition-colors">
             <ShoppingCart size={24} />
-            {cartCount > 0 && (
-              <span className="absolute -top-2 -right-2 bg-coral text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center">
+            {isLoggedIn && cartCount > 0 && (
+              <span className="absolute -top-2 -right-2 bg-red-600 text-white text-xs font-bold rounded-full w-5 h-5 flex items-center justify-center shadow-md">
                 {cartCount}
               </span>
             )}
           </Link>
+
+
 
           {/* User Menu */}
           <div className="relative">

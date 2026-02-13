@@ -173,6 +173,30 @@ export default function AdminDashboard() {
           setTopBooks(topBooksArray)
         }
 
+        // Calculate revenue for last 6 months
+        const monthlyRevenue = []
+        for (let i = 5; i >= 0; i--) {
+          const date = new Date()
+          date.setMonth(date.getMonth() - i)
+          const monthStart = new Date(date.getFullYear(), date.getMonth(), 1)
+          const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0, 23, 59, 59)
+
+          const monthRev = Array.isArray(ordersData)
+            ? ordersData
+                .filter((order: any) => {
+                  const orderDate = new Date(order.createdAt)
+                  return orderDate >= monthStart && orderDate <= monthEnd
+                })
+                .reduce((sum: number, order: any) => sum + (order.totalAmount || 0), 0)
+            : 0
+
+          monthlyRevenue.push({
+            month: date.toLocaleDateString("en-US", { month: "short" }),
+            revenue: monthRev,
+          })
+        }
+        setRevenueData(monthlyRevenue)
+
         // Calculate revenue for last 7 days
         const last7Days = []
         for (let i = 6; i >= 0; i--) {

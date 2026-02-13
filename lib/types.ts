@@ -9,7 +9,9 @@ export interface Book {
   category: string
   stock: number
   image?: string  // Base64 encoded image
+  imageUrl?: string  // URL or path to image
   active?: boolean  // Book availability status
+
   series?: string  // Series/Volume name (e.g., "Harry Potter", "A Song of Ice and Fire")
   volumeNumber?: number  // Volume/book number in series (e.g., 1, 2, 3)
   createdAt?: Date
@@ -82,7 +84,8 @@ export interface Order {
   shippingLongitude?: number
   // Payment & Status
   paymentStatus: "pending" | "paid" | "failed" | "expired"
-  paymentMethod?: "qrph" | "card" | "transfer"
+  paymentMethod?: "qrph" | "card" | "transfer" | "cod"
+
   paymongoPaymentIntentId?: string
   paymongoPaymentMethodId?: string
   // Order status workflow

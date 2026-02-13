@@ -207,7 +207,7 @@ END ✓
 ```
 Endpoint: POST https://api.paymongo.com/v1/qrph/sources
 Type: Official QR Ph endpoint (PayMongo recommended)
-Keys: Test keys configured (sk_test_8C9rpqtBUYXpiaiNPNUBmxRH)
+Keys: Test keys configured (sk_test_XXXXXXXXXXXXXXXXXXXXXXXXXXXX)
 Payment Method: Recorded as "qrph" in orders
 ```
 
