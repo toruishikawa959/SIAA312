@@ -1,0 +1,64 @@
+[{
+  "_id": {
+    "$oid": "6903825ae09089863683d2e6"
+  },
+  "userId": {
+    "$oid": "6901cbd53f3b5d4325266006"
+  },
+  "createdAt": {
+    "$date": "2025-10-30T15:20:58.455Z"
+  },
+  "items": [
+    {
+      "bookId": {
+        "$oid": "68fcd4fce381cc48a0724563"
+      },
+      "title": "The Catcher in the Rye",
+      "author": "J.D. Salinger",
+      "price": 499.99,
+      "quantity": 1,
+      "cover": null,
+      "addedAt": {
+        "$date": "2025-10-30T15:20:58.455Z"
+      },
+      "updatedAt": {
+        "$date": "2025-10-30T15:20:58.455Z"
+      }
+    }
+  ],
+  "updatedAt": {
+    "$date": "2025-10-30T15:20:58.455Z"
+  }
+},
+{
+  "_id": {
+    "$oid": "690cbdad334661cdb4507134"
+  },
+  "userId": {
+    "$oid": "68fe84d9a9b17ae205fcf28e"
+  },
+  "createdAt": {
+    "$date": "2025-11-06T15:24:29.833Z"
+  },
+  "items": [
+    {
+      "bookId": {
+        "$oid": "68fcd4fce381cc48a0724560"
+      },
+      "title": "The Great Gatsby",
+      "author": "F. Scott Fitzgerald",
+      "price": 257.4897,
+      "quantity": 3,
+      "cover": null,
+      "addedAt": {
+        "$date": "2025-11-06T15:24:29.833Z"
+      },
+      "updatedAt": {
+        "$date": "2025-11-06T15:24:29.833Z"
+      }
+    }
+  ],
+  "updatedAt": {
+    "$date": "2025-11-06T15:24:29.833Z"
+  }
+}]

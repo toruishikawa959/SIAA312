@@ -1,0 +1,16 @@
+[{
+  "_id": {
+    "$oid": "690cbb5ce08e07d9bb0bb4ea"
+  },
+  "email": "aamercado8074qc@student.fatima.edu.ph",
+  "active": true,
+  "subscribedAt": {
+    "$date": "2025-11-06T15:14:36.965Z"
+  },
+  "createdAt": {
+    "$date": "2025-11-06T15:14:36.965Z"
+  },
+  "updatedAt": {
+    "$date": "2025-11-06T15:19:43.528Z"
+  }
+}]

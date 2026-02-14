@@ -1,0 +1,63 @@
+[2025-10-25T20:35:30.590Z] [QR Ph] Payment Request Received {"orderId":"68fd349057dcdcb621a3330f","amount":165.648,"email":"spadev99@gmail.com","name":"Andrei mercado"}
+[2025-10-25T20:35:30.597Z] [QR Ph] Amount conversion {"originalAmount":165.648,"amountInCents":16565}
+[2025-10-25T20:35:30.599Z] [QR Ph] Step 1: Creating Payment Intent
+[2025-10-25T20:35:30.862Z] [QR Ph] Step 1 Success - Intent ID {"paymentIntentId":"pi_mCYW6Qkoh4L6CA6PokyPKGep","amountInCents":16565}
+[2025-10-25T20:35:30.988Z] [QR Ph] Step 3: Attaching Payment Method to Intent
+[2025-10-25T20:35:31.801Z] [QR Ph] Step 3 Success - Payment attached
+[2025-10-25T20:35:31.830Z] [QR Ph] Step 3 Success - Payment attached
+[2025-10-27T04:47:18.106Z] [QR Ph] Payment Request Received {"orderId":"68fef94c50250a2ec0ca82fd","amount":559.9776,"email":"spadev99@gmail.com","name":"Andrei mercado"}
+[2025-10-27T04:47:18.109Z] [QR Ph] Amount conversion {"originalAmount":559.9776,"amountInCents":55998}
+[2025-10-27T04:47:18.110Z] [QR Ph] Step 1: Creating Payment Intent
+[2025-10-27T04:47:18.586Z] [QR Ph] Step 1 Success - Intent ID {"paymentIntentId":"pi_X1XM2tKiwLzSczKBPzK2Dkac","amountInCents":55998}
+[2025-10-27T04:47:18.757Z] [QR Ph] Step 3: Attaching Payment Method to Intent
+[2025-10-27T04:47:19.903Z] [QR Ph] Step 3 Success - Payment attached
+[2025-10-27T04:47:19.908Z] [QR Ph] Step 3 Success - Payment attached
+[2025-10-27T04:59:36.174Z] [QR Ph] Payment Request Received {"orderId":"68fefc3650250a2ec0ca82fe","amount":279.9888,"email":"spadev99@gmail.com","name":"Andrei mercado"}
+[2025-10-27T04:59:36.179Z] [QR Ph] Amount conversion {"originalAmount":279.9888,"amountInCents":27999}
+[2025-10-27T04:59:36.181Z] [QR Ph] Step 1: Creating Payment Intent
+[2025-10-27T04:59:36.687Z] [QR Ph] Step 1 Success - Intent ID {"paymentIntentId":"pi_Ai2jXgsRtPNh5SqrY9ob1LXH","amountInCents":27999}
+[2025-10-27T04:59:36.846Z] [QR Ph] Step 3: Attaching Payment Method to Intent
+[2025-10-27T04:59:37.966Z] [QR Ph] Step 3 Success - Payment attached
+[2025-10-27T04:59:37.971Z] [QR Ph] Step 3 Success - Payment attached
+[2025-10-28T00:50:42.670Z] [QR Ph] Payment Request Received {"orderId":"6900135c316140afceeed3dc","amount":995.9776,"email":"spadev99@gmail.com","name":"Andrei mercado"}
+[2025-10-28T00:50:42.683Z] [QR Ph] Amount conversion {"originalAmount":995.9776,"amountInCents":99598}
+[2025-10-28T00:50:42.684Z] [QR Ph] Step 1: Creating Payment Intent
+[2025-10-28T00:50:43.445Z] [QR Ph] Step 1 Success - Intent ID {"paymentIntentId":"pi_T9mrLg63i93PjukHjTLGEPGE","amountInCents":99598}
+[2025-10-28T00:50:43.763Z] [QR Ph] Step 3: Attaching Payment Method to Intent
+[2025-10-28T00:50:44.788Z] [QR Ph] Step 3 Success - Payment attached
+[2025-10-28T00:50:44.794Z] [QR Ph] Step 3 Success - Payment attached
+[2025-10-28T01:02:27.324Z] [QR Ph] Payment Request Received {"orderId":"6900161d316140afceeed3dd","amount":559.9776,"email":"spadev99@gmail.com","name":"Andrei mercado"}
+[2025-10-28T01:02:27.342Z] [QR Ph] Amount conversion {"originalAmount":559.9776,"amountInCents":55998}
+[2025-10-28T01:02:27.352Z] [QR Ph] Step 1: Creating Payment Intent
+[2025-10-28T01:02:27.857Z] [QR Ph] Step 1 Success - Intent ID {"paymentIntentId":"pi_aCsBd6am4s99baVKjiEy5tuy","amountInCents":55998}
+[2025-10-28T01:02:28.061Z] [QR Ph] Step 3: Attaching Payment Method to Intent
+[2025-10-28T01:02:29.041Z] [QR Ph] Step 3 Success - Payment attached
+[2025-10-28T01:02:29.048Z] [QR Ph] Step 3 Success - Payment attached
+[2025-10-28T01:37:56.102Z] [QR Ph] Payment Request Received {"orderId":"69001e70935e1d83e13a16ac","amount":279.9888,"email":"thehecksopogi@gmail.com","name":"Spade Admin"}
+[2025-10-28T01:37:56.108Z] [QR Ph] Amount conversion {"originalAmount":279.9888,"amountInCents":27999}
+[2025-10-28T01:37:56.109Z] [QR Ph] Step 1: Creating Payment Intent
+[2025-10-28T01:37:58.180Z] [QR Ph] Step 1 Success - Intent ID {"paymentIntentId":"pi_PEyZP5tef9JingJ2AcxDNXBc","amountInCents":27999}
+[2025-10-28T01:38:01.929Z] [QR Ph] Step 3: Attaching Payment Method to Intent
+[2025-10-28T01:38:03.732Z] [QR Ph] Step 3 Success - Payment attached
+[2025-10-28T01:38:03.736Z] [QR Ph] Step 3 Success - Payment attached
+[2025-10-28T04:01:00.198Z] [QR Ph] Payment Request Received {"orderId":"69003e92e591fad874bdf311","amount":503.9888}
+[2025-10-28T04:01:01.905Z] [QR Ph] Amount conversion {"originalAmount":503.9888,"amountInCents":50399}
+[2025-10-28T04:01:01.907Z] [QR Ph] Step 1: Creating Payment Intent
+[2025-10-28T04:01:02.489Z] [QR Ph] Step 1 Success - Intent ID {"paymentIntentId":"pi_QcHcsKd6LZH66zRR3RK9rA12","amountInCents":50399}
+[2025-10-28T04:01:03.218Z] [QR Ph] Step 3: Attaching Payment Method to Intent
+[2025-10-28T04:01:04.563Z] [QR Ph] Step 3 Success - Payment attached
+[2025-10-28T04:01:04.569Z] [QR Ph] Step 3 Success - Payment attached
+[2025-10-30T15:15:09.991Z] [QR Ph] Payment Request Received {"orderId":"690380f32fde9708e86d72ce","amount":2059.9216}
+[2025-10-30T15:15:10.002Z] [QR Ph] Amount conversion {"originalAmount":2059.9216,"amountInCents":205992}
+[2025-10-30T15:15:10.005Z] [QR Ph] Step 1: Creating Payment Intent
+[2025-10-30T15:15:10.247Z] [QR Ph] Step 1 Success - Intent ID {"paymentIntentId":"pi_zWnVVo7cQthXwQA1zqLmehWh","amountInCents":205992}
+[2025-10-30T15:15:10.445Z] [QR Ph] Step 3: Attaching Payment Method to Intent
+[2025-10-30T15:15:11.358Z] [QR Ph] Step 3 Success - Payment attached
+[2025-10-30T15:15:11.362Z] [QR Ph] Step 3 Success - Payment attached
+[2025-11-06T15:29:13.756Z] [QR Ph] Payment Request Received {"orderId":"690cbeb7e08e07d9bb0bb4eb","amount":360.5,"email":"aamercado8074qc@student.fatima.edu.ph","name":"Andrei A Mercado"}
+[2025-11-06T15:29:13.772Z] [QR Ph] Amount conversion {"originalAmount":360.5,"amountInCents":36050}
+[2025-11-06T15:29:13.775Z] [QR Ph] Step 1: Creating Payment Intent
+[2025-11-06T15:29:14.010Z] [QR Ph] Step 1 Success - Intent ID {"paymentIntentId":"pi_wEDNfccnbTWJSqhrTad8fx17","amountInCents":36050}
+[2025-11-06T15:29:14.137Z] [QR Ph] Step 3: Attaching Payment Method to Intent
+[2025-11-06T15:29:15.079Z] [QR Ph] Step 3 Success - Payment attached
+[2025-11-06T15:29:15.091Z] [QR Ph] Step 3 Success - Payment attached
